@@ -23,7 +23,7 @@ class Product extends Model
         'shipping' => 1,
         'points' => 0,
         'tax_class_id' => 1,
-        'date_available' => '1900-10-11',
+        'date_available' => '2900-10-11',
         'weight' => 12.8,
         'weight_class_id' => 1,
         'length' => 0,
@@ -45,12 +45,10 @@ class Product extends Model
         'jan',
         'isbn',
         'mpn',
-        'location',
         'manufacturer_id',
         'shipping',
         'points',
         'tax_class_id',
-        'date_available',
         'weight',
         'weight_class_id',
         'length',
@@ -65,7 +63,6 @@ class Product extends Model
         'date_modified',
 
     ];
-
     public $timestamps = false;
 
     public function getPriceAttribute($value)
@@ -76,7 +73,6 @@ class Product extends Model
     {
         return $this->hasMany('App\ProductOption', 'product_id', 'product_id');
     }
-
     public function descriptions()
     {
         return $this->hasMany('App\ProductDescription', 'product_id', 'product_id');
@@ -89,5 +85,4 @@ class Product extends Model
     {
         return $this->hasMany('App\ProductDiscount', 'product_id', 'product_id');
     }
-
 }

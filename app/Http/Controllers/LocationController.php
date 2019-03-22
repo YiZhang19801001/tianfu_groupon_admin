@@ -69,7 +69,17 @@ class LocationController extends Controller
         }
 
         // create location
-        $location = Location::create(['name' => $request->name, 'open' => json_encode($request->open), 'address' => $request->address, 'telephone' => $request->telephone]);
+        $location = Location::create([
+            'name' => $request->name,
+            'open' => json_encode($request->open),
+            'address' => $request->address,
+            'telephone' => $request->telephone,
+        ]);
+
+        if (isset($request->status)) {
+            $location->status = $request->status;
+            $location->save();
+        }
 
         // prepare data
         $locations = $this->helper->getLocations();

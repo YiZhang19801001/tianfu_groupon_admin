@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\LayoutText;
+use App\Order;
 use App\SalesGroup;
 use Illuminate\Http\Request;
 
@@ -56,6 +57,8 @@ class InitController extends Controller
             "start_date" => $start_date,
             "end_date" => $end_date,
         );
-        return response()->json(compact("custom_setting", "labels", "app_status"), 200);
+
+        $display_orders = Order::orderBy('date_added', 'desc')->take(50)->get();
+        return response()->json(compact("custom_setting", "labels", "app_status", 'display_orders'), 200);
     }
 }
