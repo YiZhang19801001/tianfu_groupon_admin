@@ -169,7 +169,7 @@ class ProductController extends Controller
         $product->quantity = $request->product->quantity;
         $product->sort_order = $request->product->sort_order;
         if ($request->isGroupon) {
-            $product->stock_status_id = $request->product->order_status_id;
+            $product->stock_status_id = $request->product->stock_status_id;
         }
 
         //How To:: upload image React && Laravel
