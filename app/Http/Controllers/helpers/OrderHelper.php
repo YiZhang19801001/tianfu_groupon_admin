@@ -121,6 +121,8 @@ class OrderHelper
         $detailedOrder["store_id"] = $order->store_id;
         $store = Location::find($order->store_id);
         $detailedOrder["store_name"] = $store->name;
+        $detailedOrder["store_address"] = $store->address;
+        $detailedOrder["store_phone"] = $store->telephone;
         $detailedOrder["picked_date"] = $order->fax;
         $detailedOrder["create_date"] = $order->date_added;
         $detailedOrder["payment_method"] = $order->payment_method;
