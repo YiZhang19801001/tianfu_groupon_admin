@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\helpers\OrderHelper;
 use App\LayoutText;
 use App\Order;
 use App\SalesGroup;
@@ -9,6 +10,10 @@ use Illuminate\Http\Request;
 
 class InitController extends Controller
 {
+    public function __construct()
+    {
+        $this->orderHelper = new OrderHelper();
+    }
     public function index(Request $request)
     {
         $language_id = isset($request->language_id) ? $request->language_id : 2;
@@ -59,6 +64,9 @@ class InitController extends Controller
         );
 
         $display_orders = Order::orderBy('date_added', 'desc')->take(50)->get();
-        return response()->json(compact("custom_setting", "labels", "app_status", 'display_orders'), 200);
+        $display_orders = $this->orderHelper->makeDisplayOrders($display_orders);
+
+        $contact_qrcode = url('/') . "/images/qr_code.png";
+        return response()->json(compact("custom_setting", "labels", "app_status", 'display_orders', 'contact_qrcode'), 200);
     }
 }

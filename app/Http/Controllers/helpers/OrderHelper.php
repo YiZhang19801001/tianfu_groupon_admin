@@ -311,4 +311,24 @@ class OrderHelper
         return $orderOptions;
     }
 
+    public function makeDisplayOrders($orders)
+    {
+        $result_array = array();
+
+        foreach ($orders as $order) {
+            $display_order = array();
+            $order = json_decode(json_encode($order));
+
+            $user = User::find($order->customer_id);
+            $display_order["order_id"] = $order->order_id;
+            $display_order["customer_name"] = $user->username;
+            $display_order["date"] = $order->date_added;
+            $display_order["total"] = $order->total;
+
+            array_push($result_array, $display_order);
+        }
+
+        return $result_array;
+    }
+
 }
