@@ -12,7 +12,13 @@ return [
     | default location for this type of information, allowing packages
     | to have a conventional place to find your various credentials.
     |
-    */
+     */
+
+    'nexmo' => [
+        'key' => env('NEXMO_KEY'),
+        'secret' => env('NEXMO_SECRET'),
+        'sms_from' => '61403357750',
+    ],
 
     'mailgun' => [
         'domain' => env('MAILGUN_DOMAIN'),
