@@ -58,14 +58,15 @@ class ReportsHelper
             $product_id = $orderArray[0]->product_id;
 
             $product_name = Product::find($product_id)->descriptions()->where("language_id", $language_id)->first()->name;
+
             foreach ($orderArray as $order) {
                 $total += $order->total;
             }
+
             array_push($array, [
                 "product" => $product_id,
                 "product_name" => $product_name,
                 "total" => $total,
-
             ]);
 
         }

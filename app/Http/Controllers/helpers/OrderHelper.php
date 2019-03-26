@@ -339,4 +339,85 @@ class OrderHelper
         return $result_array;
     }
 
+    public function makeOrderedProductsListByStore($search_string, $start_date, $end_date)
+    {
+        $orders = Order::where("date_added", "<=", $end_date)
+            ->where("date_added", ">=", $start_date)
+            ->paginate(6);
+
+        foreach ($orders as $order) {
+            if ($search_string !== "") {
+                if (
+                    !(strpos($order['lastname'], $search_string) !== false)
+                    && !(strpos($order['telephone'], $search_string) !== false)
+                    && !(strpos($order['invoice_no'], $search_string) !== false)
+                ) {
+                    $orders = $orders->filter(function ($item) use ($order) {
+                        return $item->order_id !== $order->order_id;
+                    })->values();
+                }
+            }
+        }
+
+        $array = array();
+        $order_ids = $orders->pluck('order_id');
+
+        $order_products = OrderProduct::whereIn('order_id', $order_ids)->get()->groupby("product_id");
+
+        foreach ($order_products as $orderArray) {
+            $total = 0;
+            $quantity = 0;
+            $product_id = $orderArray[0]->product_id;
+            $product = Product::find($product_id);
+            $product_name = $product->descriptions()->where("language_id", 2)->first()->name;
+            foreach ($orderArray as $order) {
+                $quantity += $order->quantity;
+                $total += $order->total;
+            }
+            array_push($array, [
+                "product" => $product_id,
+                "product_name" => $product_name,
+                "total" => $total,
+                "quantity" => $quantity,
+                "location_id" => $product->location,
+                "store_name" => $product->location()->first()->name,
+            ]);
+
+        }
+
+        $collection = collect($array);
+        return $collection->groupBy("location_id")->values();
+    }
+
+    public function makeOrdersGroupByLocation($search_string, $start_date, $end_date, $location_id)
+    {
+        $orders = Order::where("date_added", "<=", $end_date)
+            ->where("date_added", ">=", $start_date)
+            ->where("store_id", $location_id)
+            ->paginate(6);
+        foreach ($orders as $order) {
+            if ($search_string !== "") {
+                if (
+                    !(strpos($order['lastname'], $search_string) !== false)
+                    && !(strpos($order['telephone'], $search_string) !== false)
+                    && !(strpos($order['invoice_no'], $search_string) !== false)
+                ) {
+                    $orders = $orders->filter(function ($item) use ($order) {
+                        return $item->order_id !== $order->order_id;
+                    })->values();
+                }
+            }
+        }
+        foreach ($orders as $order) {
+            $order["status_name"] = $order->status()->first()->name;
+            $user = User::find($order->customer_id);
+            $order["user"] = $user;
+            $store = Location::find($order->store_id);
+            $order["order_items"] = self::fetchOrderProducts($order->order_id);
+
+            $order["store_name"] = $store->name;
+        }
+        return $orders;
+
+    }
 }

@@ -8,7 +8,7 @@ class Product extends Model
 {
     protected $table = 'oc_product';
     protected $primaryKey = 'product_id';
-    protected $fillable = ['price', 'quantity', 'sort_order', "stock_status_id"];
+    protected $fillable = ['price', 'quantity', 'sort_order', "stock_status_id", 'date_available', 'location'];
     protected $attributes = [
         'model' => '',
         "sku" => "",
@@ -17,13 +17,11 @@ class Product extends Model
         'jan' => '',
         'isbn' => '',
         'mpn' => '',
-        'location' => '',
         'image' => '',
         'manufacturer_id' => 0,
         'shipping' => 1,
         'points' => 0,
         'tax_class_id' => 1,
-        'date_available' => '2900-10-11',
         'weight' => 12.8,
         'weight_class_id' => 1,
         'length' => 0,
@@ -36,7 +34,6 @@ class Product extends Model
         'viewed' => 1,
         'date_added' => '1900-10-11',
         'date_modified' => '1900-10-11',
-
     ];
     protected $hidden = [
         'model',
@@ -47,7 +44,6 @@ class Product extends Model
         'mpn',
         'manufacturer_id',
         'shipping',
-        'points',
         'tax_class_id',
         'weight',
         'weight_class_id',
@@ -57,11 +53,9 @@ class Product extends Model
         'length_class_id',
         'subtract',
         'minimum',
-
         'viewed',
         'date_added',
         'date_modified',
-
     ];
     public $timestamps = false;
 
@@ -84,5 +78,9 @@ class Product extends Model
     public function discounts()
     {
         return $this->hasMany('App\ProductDiscount', 'product_id', 'product_id');
+    }
+    public function location()
+    {
+        return $this->hasOne('App\Location', 'location_id', 'location');
     }
 }

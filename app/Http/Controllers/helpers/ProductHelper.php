@@ -43,6 +43,9 @@ class ProductHelper
                 $product["isDiscount"] = $discountInfo["status"];
                 $product["discountQuantity"] = $discountInfo["quantity"];
 
+                # make product location
+                $location = $product->location()->first();
+                $product["store_name"] = $location->name;
                 # make product name
                 $productDescription = $product->descriptions()->where('language_id', $language_id)->first();
                 if ($productDescription === null) {
@@ -139,6 +142,7 @@ class ProductHelper
         $responseData = array();
 //1. fetch product
         $product = Product::find($product_id);
+        $product->store_name = $product->location()->first()->name;
         $product->image = url('/') . $product->image;
         $responseData['product'] = $product;
 

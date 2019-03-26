@@ -76,6 +76,7 @@ class OrderController extends Controller
     {
         $method = isset($request->method) ? $request->method : "all";
         $search_string = isset($request->search_string) ? $request->search_string : "";
+
         $dt = new \DateTime("now", new \DateTimeZone('Australia/Sydney'));
         $today = $dt->format('Y-m-d');
 
@@ -84,13 +85,21 @@ class OrderController extends Controller
 
         switch ($method) {
             case 'all':
-                $orders = $this->helper->makeOrders($search_string, $start_date, $end_date);
+                if (isset($request->location_id)) {
+                    $orders = $this->helper->makeOrdersGroupByLocation($search_string, $start_date, $end_date, $request->location_id);
+                } else {
+
+                    $orders = $this->helper->makeOrders($search_string, $start_date, $end_date);
+                }
                 break;
             case 'byStore':
                 $orders = $this->helper->makeOrdersByStore($search_string, $start_date, $end_date);
                 break;
             case 'adv':
                 $orders = $this->helper->makeOrdersByCondition($search_string, $start_date, $end_date);
+                break;
+            case 'products':
+                $orders = $this->helper->makeOrderedProductsListByStore($search_string, $start_date, $end_date);
                 break;
             default:
                 $orders = $this->helper->makeOrders($search_string, $start_date, $end_date);
