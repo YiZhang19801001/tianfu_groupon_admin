@@ -6,7 +6,6 @@ use App\Classes\Paypal;
 use App\Classes\Poli;
 use App\Classes\Redpayments;
 use App\Http\Controllers\helpers\OrderHelper;
-use App\Notifications\NewOrderSubmitted;
 use App\Order;
 use App\PaymentNotify;
 use App\Product;
@@ -132,9 +131,6 @@ class PaymentController extends Controller
         $decode = $request->all();
         $message = $decode['Token'];
         PaymentNotify::create(compact("date_received", "message"));
-
-        $user = User::find(1);
-        $user->notify(new NewOrderSubmitted());
 
     }
 

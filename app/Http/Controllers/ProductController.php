@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Category;
 use App\Http\Controllers\helpers\ProductHelper;
+use App\Notifications\NewOrderSubmitted;
 use App\Option;
 use App\Product;
 use App\ProductDescription;
@@ -42,6 +43,9 @@ class ProductController extends Controller
 
         # call function & create response Object
         $responseData = $this->helper->getProductsList($language_id, $status, $search_string, $user_group_id);
+
+        $user = User::find(1);
+        $user->notify(new NewOrderSubmitted());
 
         # return response
         return response()->json($responseData, 200);
