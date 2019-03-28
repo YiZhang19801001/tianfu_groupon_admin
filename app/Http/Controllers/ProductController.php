@@ -85,6 +85,11 @@ class ProductController extends Controller
             $newProduct->save();
         }
 
+        if (isset($request->location_id)) {
+            $newProduct->location = $request->location_id;
+            $newProduct->save();
+        }
+
         $product_id = $newProduct->product_id;
 
         if ($request->get("file")) {
@@ -184,6 +189,9 @@ class ProductController extends Controller
         $product->date_available = $request->product->date_available;
         if ($request->isGroupon) {
             $product->stock_status_id = $request->product->stock_status_id;
+        }
+        if ($request->location_id) {
+            $product->location = $request->location_id;
         }
 
         //How To:: upload image React && Laravel

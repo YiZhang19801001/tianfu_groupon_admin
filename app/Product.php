@@ -8,7 +8,7 @@ class Product extends Model
 {
     protected $table = 'oc_product';
     protected $primaryKey = 'product_id';
-    protected $fillable = ['price', 'quantity', 'sort_order', "stock_status_id", 'date_available', 'location'];
+    protected $fillable = ['price', 'quantity', 'sort_order', "stock_status_id", 'date_available'];
     protected $attributes = [
         'model' => '',
         "sku" => "",
