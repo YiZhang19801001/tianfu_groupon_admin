@@ -189,6 +189,9 @@ return [
         // upload image
         Intervention\Image\ImageServiceProvider::class,
 
+        # export excels
+        Maatwebsite\Excel\ExcelServiceProvider::class,
+
     ],
 
     /*
@@ -241,6 +244,8 @@ return [
         'JWTAuth' => Tymon\JWTAuth\Facades\JWTAuth::class,
         // upload image
         'Image' => Intervention\Image\Facades\Image::class,
+        # export excels
+        'Excel' => Maatwebsite\Excel\Facades\Excel::class,
 
     ],
 
