@@ -178,7 +178,7 @@ class OrderHelper
     {
         $orders = Order::where("date_added", "<=", $end_date)
             ->where("date_added", ">=", $start_date)
-            ->paginate(3);
+            ->paginate(10);
         foreach ($orders as $order) {
             if ($search_string !== "") {
                 if (
@@ -343,7 +343,7 @@ class OrderHelper
     {
         $orders = Order::where("date_added", "<=", $end_date)
             ->where("date_added", ">=", $start_date)
-            ->paginate(6);
+            ->where("order_status_id", 2)->get();
 
         foreach ($orders as $order) {
             if ($search_string !== "") {

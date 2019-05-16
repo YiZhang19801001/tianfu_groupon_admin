@@ -17,6 +17,7 @@ class OrderProduct extends Model
         "model" => "",
         "tax" => 0,
         'reward' => 0,
+        'status' => 0,
     ];
 
     protected $hidden = [
