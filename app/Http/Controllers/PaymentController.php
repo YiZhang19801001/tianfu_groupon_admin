@@ -121,7 +121,18 @@ class PaymentController extends Controller
 
         $order->payment_code = $payment_id;
         $order->save();
+        if ($order_status === 'success') {
+            // make notice by sms
+            $basic = new \Nexmo\Client\Credentials\Basic('7c3f0476', 'Bcw4iJegrWBx1c5Z');
+            $client = new \Nexmo\Client($basic);
 
+            $message = $client->message()->send([
+                'to' => '61403357750',
+                'from' => 'best choice',
+                'text' => "order approved, total amount: AUD$ $request->total",
+            ]);
+
+        }
         return response()->json([
             "status" => $order_status,
             "approvel_url" => $approvel_url,

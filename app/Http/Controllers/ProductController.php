@@ -183,7 +183,7 @@ class ProductController extends Controller
         $product->price = $request->product->price;
         $product->quantity = $request->product->quantity;
         $product->sort_order = $request->product->sort_order;
-        $product->points = $request->product->points;
+        // $product->points = $request->product->points;
         $product->location = $request->product->location;
         $product->date_available = $request->product->date_available;
         if ($request->isGroupon) {

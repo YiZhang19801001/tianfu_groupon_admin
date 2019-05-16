@@ -184,9 +184,14 @@ class OrderController extends Controller
 
         $order_products = $this->helper->createOrderProducts($request, $order->order_id);
 
-        // make reponse body
+        $basic = new \Nexmo\Client\Credentials\Basic('7c3f0476', 'Bcw4iJegrWBx1c5Z');
+        $client = new \Nexmo\Client($basic);
 
-        //
+        $message = $client->message()->send([
+            'to' => '61403357750',
+            'from' => '最优选',
+            'text' => "订单$request->invoice_no,成功下单,本次消费$request->total",
+        ]);
 
         // Todo:: paginate
         $language_id = isset($request->language_id) ? $request->language_id : config('app.default_language_id');
