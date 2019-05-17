@@ -121,18 +121,7 @@ class PaymentController extends Controller
 
         $order->payment_code = $payment_id;
         $order->save();
-        if ($order_status === 'success') {
-            // make notice by sms
-            $basic = new \Nexmo\Client\Credentials\Basic('7c3f0476', 'Bcw4iJegrWBx1c5Z');
-            $client = new \Nexmo\Client($basic);
 
-            $message = $client->message()->send([
-                'to' => '61403357750',
-                'from' => 'best choice',
-                'text' => "order approved, total amount: AUD$ $request->total",
-            ]);
-
-        }
         return response()->json([
             "status" => $order_status,
             "approvel_url" => $approvel_url,
@@ -204,6 +193,17 @@ class PaymentController extends Controller
         if ($channel === 'paypal') {
 
         }
+
+        // make notice by sms
+        $basic = new \Nexmo\Client\Credentials\Basic('7c3f0476', 'Bcw4iJegrWBx1c5Z');
+        $client = new \Nexmo\Client($basic);
+        $sms_transactionId = $payment_information["transaction_id"];
+        $sms_total = $payment_information["paid_amount"];
+        $message = $client->message()->send([
+            'to' => '61403357750',
+            'from' => 'best choice',
+            'text' => "order $sms_transactionId approved, total amount: AUD$ $sms_total ",
+        ]);
 
         return response()->json(compact("payment_information"), 200);
 

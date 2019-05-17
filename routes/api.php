@@ -89,4 +89,4 @@ Route::get("payment", "PaymentController@query");
 Route::post('payments', 'PaymentController@notify');
 Route::delete('payments', 'PaymentController@cancel');
 
-Route::apiResources(['excels' => 'ExportExcelController']);
+Route::apiResources(['excels' => 'ExportExcelController', 'worksheets' => 'WorkSheetController']);

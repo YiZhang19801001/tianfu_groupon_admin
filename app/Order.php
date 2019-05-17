@@ -11,7 +11,7 @@ class Order extends Model
     public $timestamps = false;
 
     //'fax' be used as pickedDate
-    protected $fillable = ['invoice_no', 'store_id', 'customer_id', 'fax', 'payment_method', 'total', 'date_added', 'date_modified', 'order_status_id'];
+    protected $fillable = ['invoice_no', 'store_id', 'customer_id', 'fax', 'payment_method', 'total', 'date_added', 'date_modified', 'order_status_id', 'pickup_date'];
 
     protected $attributes = [
         'invoice_prefix' => "MELTIANFU",
