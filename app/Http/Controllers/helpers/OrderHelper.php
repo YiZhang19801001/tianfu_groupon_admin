@@ -179,11 +179,16 @@ class OrderHelper
         $orders = Order::where("date_added", "<=", $end_date)
             ->where("date_added", ">=", $start_date)
             ->paginate(10);
+
         foreach ($orders as $order) {
+            $user = User::find($order['customer_id']);
+            $lastName = strtolower($user->username);
+            $telephone = strtolower($user->phone);
+
             if ($search_string !== "") {
                 if (
-                    !(strpos($order['lastname'], $search_string) !== false)
-                    && !(strpos($order['telephone'], $search_string) !== false)
+                    !(strpos($lastName, strtolower($search_string)) !== false)
+                    && !(strpos($telephone, strtolower($search_string)) !== false)
                     && !(strpos($order['invoice_no'], $search_string) !== false)
                 ) {
                     $orders = $orders->filter(function ($item) use ($order) {
@@ -208,11 +213,11 @@ class OrderHelper
     {
         $orders = Order::where("date_added", "<=", $end_date)
             ->where("date_added", ">=", $start_date)
-            ->paginate(3);
+            ->paginate(10);
         foreach ($orders as $order) {
             if ($search_string !== "") {
                 $order_products = $order->products()->where('name', 'like', "%$search_string%")->get();
-                if (count($order_products) > 0) {
+                if (count($order_products) === 0) {
                     $orders = $orders->filter(function ($item) use ($order) {
                         return $item->order_id !== $order->order_id;
                     })->values();
@@ -256,6 +261,7 @@ class OrderHelper
             $order_product = OrderProduct::create([
                 'order_id' => $order_id,
                 'product_id' => $orderItem->product_id,
+                'name' => $orderItem->name,
                 'quantity' => $orderItem->quantity,
                 'price' => $orderItem->price,
                 'total' => $orderItem->total,

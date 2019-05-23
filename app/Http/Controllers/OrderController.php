@@ -397,4 +397,16 @@ class OrderController extends Controller
         return response()->json(compact("order", "orders"), 200);
     }
 
+    public function updateOrderProduct(Request $request)
+    {
+        $orderProducts = OrderProduct::all();
+        foreach ($orderProducts as $orderProduct) {
+            $product = Product::find($orderProduct['product_id']);
+            $description = $product->descriptions()->where('language_id', 2)->first();
+            $orderProduct->name = $description->name;
+            $orderProduct->save();
+        }
+
+    }
+
 }

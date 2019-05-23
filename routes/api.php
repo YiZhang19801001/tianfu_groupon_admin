@@ -90,3 +90,5 @@ Route::post('payments', 'PaymentController@notify');
 Route::delete('payments', 'PaymentController@cancel');
 
 Route::apiResources(['excels' => 'ExportExcelController', 'worksheets' => 'WorkSheetController']);
+
+Route::get("update", "OrderController@updateOrderProduct");

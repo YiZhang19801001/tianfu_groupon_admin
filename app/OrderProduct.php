@@ -10,10 +10,9 @@ class OrderProduct extends Model
     protected $primaryKey = "order_product_id";
     public $timestamps = false;
 
-    protected $fillable = ['order_id', 'product_id', 'quantity', 'price', 'total'];
+    protected $fillable = ['order_id', 'product_id', 'quantity', 'price', 'total', 'name'];
 
     protected $attributes = [
-        'name' => "",
         "model" => "",
         "tax" => 0,
         'reward' => 0,
