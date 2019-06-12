@@ -3,19 +3,22 @@
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithTitle;
 
-class WorkSheetsExport implements FromArray, WithHeadings, WithTitle
+class WorkSheetsExport implements FromArray, WithHeadings, WithTitle, ShouldAutoSize
 {
 
     protected $workSheets;
     protected $title;
+    protected $headings;
 
-    public function __construct(array $workSheets, $title)
+    public function __construct(array $workSheets, $title, $headings)
     {
         $this->workSheets = $workSheets;
         $this->title = $title;
+        $this->headings = $headings;
     }
 
     function array(): array
@@ -25,13 +28,7 @@ class WorkSheetsExport implements FromArray, WithHeadings, WithTitle
 
     public function headings(): array
     {
-        return [
-            'product_id',
-            'product_name',
-            'image',
-            'price',
-            'store_name',
-        ];
+        return $this->headings;
     }
 
     /**

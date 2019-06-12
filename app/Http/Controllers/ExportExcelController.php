@@ -24,22 +24,47 @@ class ExportExcelController extends Controller
         $user_group_id = $request->input('user_group_id', 3);
 
         $products = $this->productHelper->getProductsList($language_id, $status, $search_string, $user_group_id);
+        $orders = [
+            array('order_id' => 1, 'invoice_no' => 1),
+        ];
 
-        // $customer_array[] = array('product_id', 'product_name', 'image', 'price', 'store_name');
+        $headingsTop = ['name'];
+        $headingsBottom = ['quantity'];
         $customer_array = [];
+
+        # make headings
         foreach ($products[0]["products"] as $product) {
 
             $product = json_decode(json_encode($product));
-            $customer_array[] = array(
-                'product_id' => $product->product_id,
-                'product_name' => $product->name,
-                'image' => $product->image,
-                'price' => $product->price,
-                'store_name' => $product->store_name,
-            );
+
+            array_push($headingsTop, $product->name);
+            array_push($headingsBottom, $product->price);
         }
 
-        $export = new WorkSheetsExport($customer_array, 'new sheets title');
+        # mapping order_products quantity to each product
+
+        foreach ($orders as $order) {
+
+            $newArray = [];
+            # 1. get order products quantity
+            $orderProducts = $order->orderProducts()->get();
+            # 2. mapping values to each products
+            foreach ($products as $product) {
+                // if product id matched return quantity, otherwise return 0
+                $matchedOrderProduct = $orderProducts->where($product->product_id)->first();
+
+                if ($matchedOrderProduct === null) {
+                    $newArray[] = 0;
+                } else {
+                    $newArray[] = $matchedOrderProduct->quantity;
+                }
+            }
+
+            $customer_array[] = $newArray;
+        }
+
+        $headings = [$headingsTop, $headingsBottom];
+        $export = new WorkSheetsExport($customer_array, 'new sheets title', $headings);
 
         // Excel::create('Customer Data', function ($excel) use ($customer_array) {
         //     $excel->setTitle('Customer Data');
