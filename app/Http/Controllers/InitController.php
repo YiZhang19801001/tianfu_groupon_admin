@@ -67,6 +67,8 @@ class InitController extends Controller
         $display_orders = $this->orderHelper->makeDisplayOrders($display_orders);
 
         $contact_qrcode = url('/') . "/images/qr_code.png";
-        return response()->json(compact("custom_setting", "labels", "app_status", 'display_orders', 'contact_qrcode'), 200);
+        $contact_url = url('/') . "/images/contact_url.png";
+
+        return response()->json(compact("custom_setting", "labels", "app_status", 'display_orders', 'contact_qrcode', 'contact_url'), 200);
     }
 }

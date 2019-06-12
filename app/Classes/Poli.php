@@ -1,6 +1,8 @@
 <?php
 namespace App\Classes;
 
+use App\Order;
+
 class Poli
 {
 
@@ -20,8 +22,8 @@ class Poli
             "MerchantHomepageURL" => $homepage,
             "SuccessURL" => "$payment_returnUrl/poli",
             "FailureURL" => $homepage,
-            "CancellationURL" => config('app.paymentCancelUrl'),
-            "NotificationURL" => config('app.paymentNotifycationUrl'),
+            "CancellationURL" => config('app.paymentCancelUrl') . "/poli",
+            "NotificationURL" => config('app.paymentNotifycationUrl') . "/poli",
         ];
 
         $ch = curl_init($url);
@@ -32,11 +34,13 @@ class Poli
         curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', "Authorization: Basic " . $auth));
 
         $curl_response = curl_exec($ch);
-// Check the return value of curl_exec(), too
+        // Check the return value of curl_exec(), too
         if ($curl_response === false) {
             throw new \Exception(curl_error($ch), curl_errno($ch));
         }
-        return json_decode($curl_response);
+        $responseBody = json_decode($curl_response);
+
+        return $responseBody;
     }
 
     public function query($token)
@@ -54,6 +58,24 @@ class Poli
 
         return $json;
 
+    }
+
+    public function handleNotify($request)
+    {
+        $decode = $request->all();
+        $response = self::query($decode['Token']);
+        $message = json_encode($response);
+        $response = json_decode($message);
+        $status = $response->TransactionStatus;
+        if ($status === 'Completed') {
+            $order = Order::where("payment_code", $response->TransactionRefNo)->first();
+            if ($order !== null) {
+                $order->order_status_id = 2;
+                $order->save();
+            }
+        }
+
+        return compact("message", "status");
     }
 }
 /* example of query response

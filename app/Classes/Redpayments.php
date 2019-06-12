@@ -29,7 +29,7 @@ class Redpayments
             "item" => $request->input("item", config("redpayments.items")),
             "mchNo" => config("redpayments.mchNo"),
             "mchOrderNo" => $request->invoice_no,
-            "notifyUrl" => config("app.paymentNotifycationUrl", "/$request->channel"),
+            "notifyUrl" => config("app.paymentNotifycationUrl") . "/$request->channel",
             "params" => $request->input("params", config("redpayments.params")),
             "payWay" => $request->input("payway", config("redpayments.payWay")),
             "quantity" => $request->quantity,
@@ -59,12 +59,13 @@ class Redpayments
         $responseBody = json_decode($curl_response);
 // return reponse
         return $responseBody;
+        // return compact('requestBody', 'responseBody');
     }
 
     public function query($paymentId)
     {
 
-        $order = Order::where('payment_code', $paymentId)->first();
+        // $order = Order::where('payment_code', $paymentId)->first();
         $date = new \DateTime("now", new \DateTimeZone("Australia/Sydney"));
         $requestBody = [
             "mchNo" => config("redpayments.mchNo"),
@@ -94,7 +95,7 @@ class Redpayments
         $responseBody = json_decode($curl_response);
 
         return $responseBody;
-
+        // return compact('requestBody', 'responseBody');
         // Todo:: finish the logic
 
     }
@@ -103,9 +104,10 @@ class Redpayments
     {
         $decode = $request->all();
         $message = json_encode($request);
-        $status = $decode->status;
-        if ($status == 'SUCCEEDED') {
-            $order = Order::where("payment_code", $response->orderNo)->first();
+        $orderNo = $decode->orderNo;
+        $response = self::query($orderNo);
+        if ($responseBody->message == 'success') {
+            $order = Order::where("payment_code", $response->mchOrderNo)->first();
             if ($order !== null) {
                 $order->order_status_id = 2;
                 $order->save();

@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\WorkSheetsExport;
 use App\Http\Controllers\helpers\ProductHelper;
-use Excel;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ExportExcelController extends Controller
 {
@@ -24,7 +25,8 @@ class ExportExcelController extends Controller
 
         $products = $this->productHelper->getProductsList($language_id, $status, $search_string, $user_group_id);
 
-        $customer_array[] = array('product_id', 'product_name', 'image', 'price', 'store_name');
+        // $customer_array[] = array('product_id', 'product_name', 'image', 'price', 'store_name');
+        $customer_array = [];
         foreach ($products[0]["products"] as $product) {
 
             $product = json_decode(json_encode($product));
@@ -37,11 +39,18 @@ class ExportExcelController extends Controller
             );
         }
 
-        \Excel::create('Customer Data', function ($excel) use ($customer_array) {
-            $excel->setTitle('Customer Data');
-            $excel->sheet('Customer Data', function ($sheet) use ($customer_array) {
-                $sheet->fromArray($customer_array, null, 'A1', false, false);
-            });
-        })->download('xlsx');
+        $export = new WorkSheetsExport($customer_array, 'new sheets title');
+
+        // Excel::create('Customer Data', function ($excel) use ($customer_array) {
+        //     $excel->setTitle('Customer Data');
+        //     $excel->sheet('Customer Data', function ($sheet) use ($customer_array) {
+        //         $sheet->fromArray($customer_array, null, 'A1', false, false);
+        //     });
+        // })->download('xlsx');
+
+        // return Excel::download($customer_array, 'customers.xlsx');
+        return Excel::download($export, 'users.xlsx');
+
+        // return response()->json($customer_array);
     }
 }

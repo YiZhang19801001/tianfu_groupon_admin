@@ -40,11 +40,11 @@ class ProductController extends Controller
             $user_group_id = $user->user_group_id;
         }
 
-        # call function & create response Object
-        $responseData = $this->helper->getProductsList($language_id, $status, $search_string, $user_group_id);
-
         // $user = User::find(1);
         // $user->notify(new NewOrderSubmitted());
+
+        # call function & create response Object
+        $responseData = $this->helper->getProductsList($language_id, $status, $search_string, $user_group_id);
 
         # return response
         return response()->json($responseData, 200);
@@ -184,8 +184,8 @@ class ProductController extends Controller
         $product->quantity = $request->product->quantity;
         $product->sort_order = $request->product->sort_order;
         // $product->points = $request->product->points;
-        $product->location = $request->product->location;
-        $product->date_available = $request->product->date_available;
+        // $product->location = $request->product->location;
+        // $product->date_available = $request->product->date_available;
         if ($request->isGroupon) {
             $product->stock_status_id = $request->product->stock_status_id;
         }
