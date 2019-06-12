@@ -19,21 +19,21 @@ use Illuminate\Http\Request;
 
 Route::get("initial", "InitController@index");
 
-Route::get('products', 'ProductController@index');
-Route::get('products/{product_id}', 'ProductController@show');
-Route::post('products', 'ProductController@create');
-Route::put('products/{product_id}', 'ProductController@update');
-Route::patch('products/{product_id}', 'ProductController@patch');
+// Route::get('products', 'ProductController@index');
+// Route::get('products/{product_id}', 'ProductController@show');
+// Route::post('products', 'ProductController@create');
+// Route::put('products/{product_id}', 'ProductController@update');
+// Route::patch('products/{product_id}', 'ProductController@patch');
 
-Route::get('categories', 'CategoryController@index');
-Route::get('categories/{category_id}', 'CategoryController@show');
-Route::post('categories', 'CategoryController@create');
-Route::put('categories/{category_id}', 'CategoryController@update');
-Route::patch('categories/{category_id}', 'CategoryController@patch');
-Route::delete("categories/{category_id}", "CategoryController@delete");
+// Route::get('categories', 'CategoryController@index');
+// Route::get('categories/{category_id}', 'CategoryController@show');
+// Route::post('categories', 'CategoryController@create');
+// Route::put('categories/{category_id}', 'CategoryController@update');
+// Route::patch('categories/{category_id}', 'CategoryController@patch');
+// Route::delete("categories/{category_id}", "CategoryController@delete");
 
-Route::get('options', 'OptionController@index');
-Route::post("options", "OptionController@create");
+// Route::get('options', 'OptionController@index');
+// Route::post("options", "OptionController@create");
 
 Route::get('locations', 'LocationController@index');
 Route::get('locations/{location_id}', 'LocationController@show');
@@ -92,3 +92,6 @@ Route::delete('payments', 'PaymentController@cancel');
 Route::apiResources(['excels' => 'ExportExcelController', 'worksheets' => 'WorkSheetController']);
 
 Route::get("update", "OrderController@updateOrderProduct");
+
+# 2019-Jun-11 refactoring
+Route::apiResources(['products' => 'ProductController', 'categories' => 'CategoryController']);

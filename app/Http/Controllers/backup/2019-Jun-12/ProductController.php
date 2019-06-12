@@ -29,10 +29,9 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         # read input from request
-        $language_id = $request->input('language_id', 2);
-        $status = $request->input('product_status', 0);
-        $search_string = $request->input('search_string', '');
-        $calledFrom = $request->input('called_from', 'client');
+        $language_id = isset($request->language_id) ? $request->language_id : 2;
+        $status = isset($request->product_status) ? $request->product_status : 0;
+        $search_string = isset($request->search_string) ? $request->search_string : "";
         # read user_group_id from token
         $user_group_id = 0;
         $token = $request->bearerToken();
@@ -41,8 +40,11 @@ class ProductController extends Controller
             $user_group_id = $user->user_group_id;
         }
 
+        // $user = User::find(1);
+        // $user->notify(new NewOrderSubmitted());
+
         # call function & create response Object
-        $responseData = $this->helper->getProductsList($language_id, $status, $search_string, $user_group_id, $calledFrom);
+        $responseData = $this->helper->getProductsList($language_id, $status, $search_string, $user_group_id);
 
         # return response
         return response()->json($responseData, 200);
@@ -67,18 +69,23 @@ class ProductController extends Controller
 
         $category = json_decode(json_encode($request->category));
         $category_id = $category->category_id;
-
         //2. create oc_product
         $newProduct = Product::create([
             'price' => $product->price,
             'quantity' => isset($product->quantity) ? $product->quantity : 999,
             "sort_order" => $product->sort_order,
+            "stock_status_id" => isset($product->stock_status_id) ? $product->stock_status_id : 500,
             'date_available' => isset($product->date_available) ? $product->date_available : '2190-12-12',
-            'manufacturer_id' => isset($product->manufacturer_id) ? $product->manufacturer_id : 1,
+            'location' => isset($product->location) ? $product->location : 1,
         ]);
 
         if (isset($product->points)) {
             $newProduct->points = $product->points;
+            $newProduct->save();
+        }
+
+        if (isset($request->location_id)) {
+            $newProduct->location = $request->location_id;
             $newProduct->save();
         }
 

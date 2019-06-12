@@ -18,7 +18,7 @@ class ProductHelper
     public function getProductsList($language_id, $status, $search_string, $user_group_id)
     {
         $categories = Category::where("status", 0)->orderBy("sort_order", 'desc')->get();
-        $calledFrom = 'client'; # client or admin
+
         $responseData = [];
 
         foreach ($categories as $category) {
@@ -32,23 +32,16 @@ class ProductHelper
             }
             $dto['name'] = $categoryDescription->name;
 
-            $products = $category->products()->where("status", $status)->where("quantity", ">=", 0)->orderBy("sort_order", "desc")->with('discounts')->get();
+            $products = $category->products()->where("status", $status)->where("quantity", ">=", 0)->orderBy("sort_order", "desc")->get();
 
             foreach ($products as $product) {
                 # deal with discount
                 // Todo:: read $user_group_id from $reqeust;
                 $user_group_id = 2;
-                $discountInfo = self::makeDiscountInfo($product->discounts, $user_group_id);
-                $product["discountPrice"] = $discountInfo["price"];
+                $discountInfo = self::makeDiscountInfo($product, $user_group_id);
+                $product["price"] = $discountInfo["price"];
                 $product["isDiscount"] = $discountInfo["status"];
                 $product["discountQuantity"] = $discountInfo["quantity"];
-
-                if (!$discountInfo["status"] && $calledFrom === 'client') {
-                    $products = $products->filter(function ($item) use ($product) {
-                        return $item->product_id !== $product->product_id;
-                    })->values();
-                    continue;
-                }
 
                 # make product location
                 $location = $product->location()->first();
@@ -79,6 +72,40 @@ class ProductHelper
 
                 # bind options to product
                 $options = array();
+                $product_options = $product->options()->get();
+                foreach ($product_options as $product_option) {
+                    $newOption = array();
+                    # product option name
+                    $productOptionDescription = $product_option->optionDescriptions()->where('language_id', $language_id)->first();
+                    if ($productOptionDescription === null) {
+                        $productOptionDescription = $product_option->optionDescriptions()->first();
+
+                    }
+                    $newOption['option_name'] = $productOptionDescription->name;
+                    # mapping other generic values
+                    $newOption['product_option_id'] = $product_option->product_option_id;
+                    $newOption['required'] = $product_option->required;
+                    $newOption['type'] = $product_option->option->type;
+
+                    # product option values
+                    $newValues = array();
+                    $productOptionValues = $product_option->optionValues()->get();
+                    foreach ($productOptionValues as $productOptionValue) {
+                        $newValue = array();
+                        # product option value name
+                        $productOptionValueDescription = $productOptionValue->descriptions()->where('language_id', $language_id)->first();
+                        if ($productOptionValueDescription === null) {
+                            $productOptionValueDescription = $productOptionValue->descriptions()->first();
+                        }
+                        $newValue['name'] = $productOptionValueDescription->name;
+                        # mapping product option generic value
+                        $newValue['price'] = number_format($productOptionValue->price, 2);
+                        $newValue['product_option_value_id'] = $productOptionValue->product_option_value_id;
+                        array_push($newValues, $newValue);
+                    }
+                    $newOption['values'] = $newValues;
+                    array_push($options, $newOption);
+                }
                 $product['options'] = $options;
             }
 
@@ -131,30 +158,29 @@ class ProductHelper
         }
         $category["name"] = $categoryDescription->name;
         $responseData['category'] = $category;
-        $responseData['discounts'] = $product->discounts()->get();
 //2.3 options
-        // $responseData['options'] = $product->options()->get();
-        // foreach ($responseData['options'] as $value) {
-        //     $valueDescription = $value->optionDescriptions()->where("language_id", $language_id)->first();
-        //     if ($valueDescription === null) {
-        //         $valueDescription = $value->optionDescriptions()->first();
-        //     }
-        //     //2.3.1 option name
+        $responseData['options'] = $product->options()->get();
+        foreach ($responseData['options'] as $value) {
+            $valueDescription = $value->optionDescriptions()->where("language_id", $language_id)->first();
+            if ($valueDescription === null) {
+                $valueDescription = $value->optionDescriptions()->first();
+            }
+            //2.3.1 option name
 
-        //     $value["option_name"] = $valueDescription->name;
-        //     //2.3.2 option values
-        //     $productOptionValues = $value->optionValues()->get();
-        //     foreach ($productOptionValues as $productOptionValue) {
-        //         $productOptionValueDescription = $value->optionDescriptions()->where("language_id", $language_id)->first();
-        //         if ($productOptionValueDescription === null) {
-        //             $productOptionValueDescription = $value->optionDescriptions()->first();
-        //         }
+            $value["option_name"] = $valueDescription->name;
+            //2.3.2 option values
+            $productOptionValues = $value->optionValues()->get();
+            foreach ($productOptionValues as $productOptionValue) {
+                $productOptionValueDescription = $value->optionDescriptions()->where("language_id", $language_id)->first();
+                if ($productOptionValueDescription === null) {
+                    $productOptionValueDescription = $value->optionDescriptions()->first();
+                }
 
-        //         $productOptionValue["option_value_name"] = $productOptionValueDescription->name;
+                $productOptionValue["option_value_name"] = $productOptionValueDescription->name;
 
-        //     }
-        //     $value["values"] = $productOptionValues;
-        // }
+            }
+            $value["values"] = $productOptionValues;
+        }
         return $responseData;
     }
 
@@ -216,22 +242,21 @@ class ProductHelper
     }
 
     # self helper functions
-    public function makeDiscountInfo($dataCollections, $user_group_id)
+    public function makeDiscountInfo($product, $user_group_id)
     {
         $dt = new \DateTime("now", new \DateTimeZone('Australia/Sydney'));
         $today = $dt->format("Y-m-d");
         $user_group_id = 2;
-        $sql = $dataCollections
+        $sql = $product->discounts()
             ->where('customer_group_id', $user_group_id)
             ->where('quantity', '>=', '0')
             ->where('date_start', '<=', $today)
             ->where('date_end', '>=', $today);
-
-        $discounts = $sql->all();
+        $discounts = $sql->get();
 
         if (count($discounts) > 0) {
             $result = $sql
-                ->sortByDesc('priority')
+                ->orderBy("priority", "desc")
                 ->first();
             return array(
                 "price" => $result->price,
@@ -240,7 +265,7 @@ class ProductHelper
             );
         }
 
-        // return array("price" => $product["price"], "quantity" => 0, "status" => false);
+        return array("price" => $product["price"], "quantity" => 0, "status" => false);
     }
 
     public function createDiscount($request, $product_id)

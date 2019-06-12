@@ -8,7 +8,7 @@ class Product extends Model
 {
     protected $table = 'oc_product';
     protected $primaryKey = 'product_id';
-    protected $fillable = ['price', 'quantity', 'sort_order', "stock_status_id", 'date_available'];
+    protected $fillable = ['price', 'quantity', 'sort_order', 'manufacturer_id', 'date_available'];
     protected $attributes = [
         'model' => '',
         "sku" => "",
@@ -18,8 +18,8 @@ class Product extends Model
         'isbn' => '',
         'mpn' => '',
         'image' => '',
-        'manufacturer_id' => 0,
         'shipping' => 1,
+        'location' => '',
         'points' => 0,
         'tax_class_id' => 1,
         'weight' => 12.8,
@@ -32,6 +32,7 @@ class Product extends Model
         'minimum' => 1,
         'status' => 0,
         'viewed' => 1,
+        'stock_status_id' => 1,
         'date_added' => '1900-10-11',
         'date_modified' => '1900-10-11',
     ];
