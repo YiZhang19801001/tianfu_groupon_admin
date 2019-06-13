@@ -94,4 +94,4 @@ Route::apiResources(['excels' => 'ExportExcelController', 'worksheets' => 'WorkS
 Route::get("update", "OrderController@updateOrderProduct");
 
 # 2019-Jun-11 refactoring
-Route::apiResources(['products' => 'ProductController', 'categories' => 'CategoryController']);
+Route::apiResources(['products' => 'ProductController', 'categories' => 'CategoryController', 'discounts' => 'ProductDiscountsController']);
