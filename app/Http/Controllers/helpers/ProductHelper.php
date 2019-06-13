@@ -5,6 +5,7 @@ use App\Category;
 use App\Product;
 use App\ProductDiscount;
 use App\ProductToCategory;
+use App\SalesGroup;
 
 class ProductHelper
 {
@@ -113,16 +114,16 @@ class ProductHelper
     public function getSingleProduct($language_id, $product_id)
     {
         $responseData = array();
-//1. fetch product
+        //1. fetch product
         $product = Product::find($product_id);
         $product->store_name = $product->location()->first()->name;
         $product->image = url('/') . $product->image;
         $responseData['product'] = $product;
 
-//2. add details
+        //2. add details
         //2.1 descriptions
         $responseData['descriptions'] = $product->descriptions()->get();
-//2.2 category
+        //2.2 category
 
         $category = Category::find(ProductToCategory::where("product_id", $product_id)->first()->category_id);
         $categoryDescription = $category->descriptions()->where("language_id", $language_id)->first();
@@ -132,7 +133,14 @@ class ProductHelper
         $category["name"] = $categoryDescription->name;
         $responseData['category'] = $category;
         $responseData['discounts'] = $product->discounts()->get();
-//2.3 options
+        # extra: generate end_date and start_date for each product_discount
+        foreach ($responseData['discounts'] as $productDiscount) {
+            $sales_group_id = $productDiscount->sales_group_id;
+            $salesGroup = SalesGroup::find($sales_group_id);
+            $productDiscount->date_start = $salesGroup->start_date;
+            $productDiscount->date_end = $salesGroup->end_date;
+        }
+        //2.3 options
         // $responseData['options'] = $product->options()->get();
         // foreach ($responseData['options'] as $value) {
         //     $valueDescription = $value->optionDescriptions()->where("language_id", $language_id)->first();
