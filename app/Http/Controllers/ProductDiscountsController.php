@@ -68,7 +68,7 @@ class ProductDiscountsController extends Controller
         $productDiscount->save();
 
         #prepare response object
-        $product = $this->productHelper->getSingleProduct(2, $product_id);
+        $product = $this->productHelper->getSingleProduct(2, $productDiscount->product_id);
         return response()->json(compact('product'), 200);
     }
 }
