@@ -59,7 +59,6 @@ class ProductController extends Controller
     {
         // Todo:: validate $request
         $errors = array();
-
         $status = 1;
         $product = json_decode(json_encode($request->product));
 
