@@ -265,33 +265,29 @@ class OrderHelper
                 'quantity' => $orderItem->quantity,
                 'price' => $orderItem->price,
                 'total' => $orderItem->total,
+                'product_discount_id' => $orderItem->product_discount_id,
             ]);
-
-            // decrease product quantity
-            $product = Product::find($orderItem->product_id);
-            $product->decrement("quantity", $orderItem->quantity);
-            $productDiscount = ProductDiscount::where("product_id", $orderItem->product_id)->first();
-            if ($productDiscount !== null) {
-
-                $productDiscount->decrement("quantity", $orderItem->quantity);
-            }
-            if (!isset($product) || $product->quantity < 0) {
-                return response()->json(["errors" => ["code" => 1, "message" => "quantity is over stock"]], 400);
-            }
-            if ($productDiscount !== null && $productDiscount->quantity < 0) {
-                return response()->json(["errors" => ["code" => 1, "message" => "quantity is over stock"]], 400);
-            }
-
-            if (isset($orderItem->options)) {
-                $orderOptions = self::createOrderOptions($orderItem->options, $order_id, $order_product->order_product_id);
-                $order_product['options'] = $orderOptions;
-            }
-
-            array_push($order_products, $order_product);
-
         }
 
         return $order_products;
+    }
+
+    /**
+     * function - modify stocks after customer paid the order
+     * @param Array $orderId
+     */
+    public function modifyStockQuantity($orderId)
+    {
+        # find orderProducts
+        $orderProducts = OrderProduct::where('order_id', $orderId)->get();
+        foreach ($orderProducts as $orderItem) {
+            # decrease product quantity
+            $productDiscount = ProductDiscount::find($orderItem->product_discount_id);
+            $productDiscount->decrement("quantity", $orderItem->quantity);
+            if ($productDiscount !== null) {
+                $productDiscount->decrement("quantity", $orderItem->quantity);
+            }
+        }
     }
 
     /**

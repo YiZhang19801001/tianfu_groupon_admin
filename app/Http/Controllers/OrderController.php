@@ -9,7 +9,6 @@ use App\Order;
 use App\OrderOption;
 use App\OrderProduct;
 use App\Product;
-use App\ProductDiscount;
 use App\User;
 use DateTime;
 use DateTimeZone;
@@ -141,63 +140,49 @@ class OrderController extends Controller
     {
         //1. validation
         //2. create
+
+        # create date for today
         $dt = new DateTime("now", new DateTimeZone('Australia/Sydney'));
         $today = $dt->format('y-m-d');
 
+        # get $user from $request
         $user = $request->user();
 
-        if (isset($request->order_id)) {
-            $order = Order::find($request->order_id);
-            if ($order !== null) {
-                $order->delete();
+        # read & mapping params
+        // 'invoice_no', 'store_id', 'customer_id', 'payment_method', 'total', 'date_added', 'date_modified', 'order_status_id', 'pickup_date_id'
 
-                $order_products = $order->products()->get();
-                foreach ($order_products as $order_product) {
-
-                    $target_product = Product::find($order_product->product_id)->increment('quantity', $order_product->quantity);
-                    $target_productDiscount = ProductDiscount::where("product_id", $order_product->product_id)->first();
-                    if ($target_productDiscount !== null) {
-                        $target_productDiscount->increment("quantity", $order_product->quantity);
-                    }
-                    $order_product->delete();
-                }
-            }
-        }
+        $maxInvoiceNo = Order::where('sales_group_id', $request->input('sales_group_id'))->max('invoice_no');
 
         $input = [
-            'invoice_no' => $request->invoice_no,
+            'invoice_no' => $maxInvoiceNo + 1,
             'store_id' => isset($request->store_id) ? $request->store_id : "",
             'customer_id' => $user->user_id,
-            'fax' => isset($request->fax) ? $request->fax : "",
             'payment_method' => isset($request->payment_method) ? $request->payment_method : "",
             'total' => isset($request->total) ? $request->total : "",
             'date_added' => $today,
             'date_modified' => $today,
-            'order_status_id' => $request->order_status_id,
+            'order_status_id' => 6,
+            'pickup_date_id' => $request->input('pickup_date_id'),
+            'comment' => $request->input('customerComments', ''),
         ];
 
         $order = Order::create($input);
-        if (isset($request->customerComments)) {
-            $order->comment = $request->customerComments;
-            $order->save();
-        }
 
         $order_products = $this->helper->createOrderProducts($request, $order->order_id);
 
+        //todo: read credentials from .env
         $basic = new \Nexmo\Client\Credentials\Basic('7c3f0476', 'Bcw4iJegrWBx1c5Z');
         $client = new \Nexmo\Client($basic);
 
+        $text = '订单' . $request->invoice_no . ',成功下单,本次消费' . $request->total;
+
         $message = $client->message()->send([
             'to' => '61403357750',
-            'from' => '最优选',
-            'text' => "订单$request->invoice_no,成功下单,本次消费$request->total",
+            'from' => '天府团购',
+            'text' => $text,
         ]);
 
-        // Todo:: paginate
-        $language_id = isset($request->language_id) ? $request->language_id : config('app.default_language_id');
-        $products = $this->productHelper->getProductsList($language_id, 0, "", 2);
-
-        return response()->json(compact("products"));
+        return response()->json(compact("order", 'order_products'));
     }
 
     /**
