@@ -14,6 +14,7 @@ class ProductDiscount extends Model
         "priority" => 1,
         "date_start" => '2019-06-06',
         "date_end" => '2019-07-02',
+        "status" => 0,
 
     ];
     public $timestamps = false;

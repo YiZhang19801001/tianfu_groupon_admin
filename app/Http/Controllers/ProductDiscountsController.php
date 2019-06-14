@@ -57,4 +57,18 @@ class ProductDiscountsController extends Controller
 
     }
 
+    public function destroy(Request $request)
+    {
+        # read inputs from $request
+        $product_discount_id = $request->input('product_discount_id');
+
+        # use model to modify DB
+        $productDiscount = ProductDiscount::find($product_discount_id);
+        $productDiscount->status = 1;
+        $productDiscount->save();
+
+        #prepare response object
+        $product = $this->productHelper->getSingleProduct(2, $product_id);
+        return response()->json(compact('product'), 200);
+    }
 }

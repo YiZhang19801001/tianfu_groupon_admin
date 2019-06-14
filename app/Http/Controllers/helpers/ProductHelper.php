@@ -132,7 +132,7 @@ class ProductHelper
         }
         $category["name"] = $categoryDescription->name;
         $responseData['category'] = $category;
-        $responseData['discounts'] = $product->discounts()->get();
+        $responseData['discounts'] = $product->discounts()->where('status', 0)->get();
         # extra: generate end_date and start_date for each product_discount
         foreach ($responseData['discounts'] as $productDiscount) {
             $sales_group_id = $productDiscount->sales_group_id;
