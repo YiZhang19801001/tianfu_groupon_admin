@@ -33,6 +33,9 @@ class ProductController extends Controller
         $status = $request->input('product_status', 0);
         $search_string = $request->input('search_string', '');
         $calledFrom = $request->input('called_from', 'client');
+
+        $sales_group_id = $calledFrom === 'client' ? $request->input('sales_group_id', 0) : 0;
+
         # read user_group_id from token
         $user_group_id = 0;
         $token = $request->bearerToken();
@@ -40,9 +43,8 @@ class ProductController extends Controller
         if ($user) {
             $user_group_id = $user->user_group_id;
         }
-
         # call function & create response Object
-        $responseData = $this->helper->getProductsList($language_id, $status, $search_string, $user_group_id, $calledFrom);
+        $responseData = $this->helper->getProductsList($language_id, $status, $search_string, $user_group_id, $sales_group_id);
 
         # return response
         return response()->json($responseData, 200);

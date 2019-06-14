@@ -16,10 +16,21 @@ class ProductHelper
      * @param integer $status
      * @return Array
      */
-    public function getProductsList($language_id, $status, $search_string, $user_group_id)
+    public function getProductsList($language_id, $status, $search_string, $user_group_id, $sales_group_id)
     {
+
+        # find sales_group_id
+
+        # fetch all productDiscounts.product_id, use for filter products
+        if ($sales_group_id != 0) {
+            $productIds = ProductDiscount::where('sales_group_id', $sales_group_id)->pluck('product_id')->toArray();
+        }
+
+        # fetch all categories, use for grouping products
         $categories = Category::where("status", 0)->orderBy("sort_order", 'desc')->get();
+
         $calledFrom = 'client'; # client or admin
+
         $responseData = [];
 
         foreach ($categories as $category) {
@@ -33,7 +44,10 @@ class ProductHelper
             }
             $dto['name'] = $categoryDescription->name;
 
-            $products = $category->products()->where("status", $status)->where("quantity", ">=", 0)->orderBy("sort_order", "desc")->with('discounts')->get();
+            $products = $category->products()->where("status", $status)->orderBy("sort_order", "desc")->with('discounts')->get();
+            if ($sales_group_id != 0) {
+                $products = $products->whereIn('product_id', $productIds);
+            }
 
             foreach ($products as $product) {
                 # deal with discount
@@ -44,7 +58,7 @@ class ProductHelper
                 $product["isDiscount"] = $discountInfo["status"];
                 $product["discountQuantity"] = $discountInfo["quantity"];
 
-                if (!$discountInfo["status"] && $calledFrom === 'client') {
+                if (!$discountInfo["status"] && $sales_group_id != 0) {
                     $products = $products->filter(function ($item) use ($product) {
                         return $item->product_id !== $product->product_id;
                     })->values();
@@ -86,20 +100,6 @@ class ProductHelper
             $dto['products'] = $products;
             array_push($responseData, $dto);
         }
-        # generate category for solod out products
-        // $noStockProducts = Product::where("quantity", "<=", 0)->get();
-        // $noStockData["category_id"] = 9999999;
-        // $noStockData["name"] = $language_id == 1 ? "Sold Out" : "售罄";
-        // $noStockData["products"] = $noStockProducts;
-        // foreach ($noStockProducts as $product) {
-        //     $productDescription = $product->descriptions()->where('language_id', $language_id)->first();
-        //     if ($productDescription === null) {
-        //         $productDescription = $product->descriptions()->first();
-        //     }
-        //     $product['name'] = $productDescription->name;
-        //     $product["options"] = array();
-        // }
-        // array_push($responseData, $noStockData);
 
         return $responseData;
     }
