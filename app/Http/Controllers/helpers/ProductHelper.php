@@ -97,7 +97,7 @@ class ProductHelper
                 $product['options'] = $options;
             }
 
-            $dto['products'] = $products;
+            $dto['products'] = $products->values();
             array_push($responseData, $dto);
         }
 
