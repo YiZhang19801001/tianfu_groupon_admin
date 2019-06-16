@@ -18,7 +18,7 @@ class LocationController extends Controller
      * @param Integer $language_id
      * @return Response all shops
      */
-    public function index()
+    public function index(Request $request)
     {
         // validation
         $errors = array();
@@ -30,10 +30,11 @@ class LocationController extends Controller
         }
 
         // prepare data
-        $locations = $this->helper->getLocations();
+        $locations = $this->helper->getLocations($request->input('sales_group_id'));
 
         return response()->json(compact('locations'), 200);
     }
+
     public function show($location_id)
     {
         $shop = Location::find($location_id);

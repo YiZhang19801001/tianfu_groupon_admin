@@ -255,7 +255,7 @@ class OrderHelper
      */
     public function createOrderProducts($request, $order_id)
     {
-        $order_products = array();
+
         foreach ($request->order_items as $orderItem) {
             $orderItem = json_decode(json_encode($orderItem));
             $order_product = OrderProduct::create([
@@ -268,6 +268,8 @@ class OrderHelper
                 'product_discount_id' => $orderItem->product_discount_id,
             ]);
         }
+
+        $order_products = OrderProduct::where('order_id', $order_id)->get();
 
         return $order_products;
     }

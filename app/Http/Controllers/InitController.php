@@ -34,6 +34,7 @@ class InitController extends Controller
         }
 
         # create app_status
+        $sales_group_id = 0;
         // today
         $dt = new \DateTime("now", new \DateTimeZone('Australia/Sydney'));
         $today = $dt->format('Y-m-d');
@@ -45,15 +46,20 @@ class InitController extends Controller
             $isOpen = true;
             $start_date = $sales_group->start_date;
             $end_date = $sales_group->end_date;
+            $sales_group_id = $sales_group->sales_group_id;
         } else {
             $isOpen = false; // no, try to find closest open date for next sales group
             $sales_group = SalesGroup::where("start_date", ">=", $today)->first();
             if ($sales_group !== null) {
                 $start_date = $sales_group->start_date;
                 $end_date = $sales_group->end_date;
+                $sales_group_id = $sales_group->sales_group_id;
+
             } else { // not found any sales group in future, return empty string, client side will render some text message to user
                 $start_date = "";
                 $end_date = "";
+                $sales_group_id = 0;
+
             }
         }
 
@@ -69,6 +75,6 @@ class InitController extends Controller
         $contact_qrcode = url('/') . "/images/qr_code.png";
         $contact_url = url('/') . "/images/contact_url.png";
 
-        return response()->json(compact("custom_setting", "labels", "app_status", 'display_orders', 'contact_qrcode', 'contact_url'), 200);
+        return response()->json(compact("custom_setting", "labels", "app_status", 'display_orders', 'contact_qrcode', 'contact_url', 'sales_group_id'), 200);
     }
 }

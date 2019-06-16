@@ -57,6 +57,7 @@ class ProductHelper
                 $product["discountPrice"] = $discountInfo["price"];
                 $product["isDiscount"] = $discountInfo["status"];
                 $product["discountQuantity"] = $discountInfo["quantity"];
+                $product['product_discount_id'] = $discountInfo['id'];
 
                 if (!$discountInfo["status"] && $sales_group_id != 0) {
                     $products = $products->filter(function ($item) use ($product) {
@@ -245,6 +246,7 @@ class ProductHelper
                 "price" => $result->price,
                 "quantity" => $result->quantity,
                 "status" => true,
+                'id' => $result->product_discount_id,
             );
         }
 

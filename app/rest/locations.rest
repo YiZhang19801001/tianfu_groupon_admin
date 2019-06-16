@@ -1,0 +1,1 @@
+GET http://kidsnparty.com.au/roben_api/groupon/public/api/locations?sales_group_id=3

@@ -8,6 +8,7 @@ use App\Option;
 use App\Order;
 use App\OrderOption;
 use App\OrderProduct;
+use App\PickupDate;
 use App\Product;
 use App\User;
 use DateTime;
@@ -152,7 +153,6 @@ class OrderController extends Controller
         // 'invoice_no', 'store_id', 'customer_id', 'payment_method', 'total', 'date_added', 'date_modified', 'order_status_id', 'pickup_date_id'
 
         $maxInvoiceNo = Order::where('sales_group_id', $request->input('sales_group_id'))->max('invoice_no');
-
         $input = [
             'invoice_no' => $maxInvoiceNo + 1,
             'store_id' => isset($request->store_id) ? $request->store_id : "",
@@ -164,25 +164,27 @@ class OrderController extends Controller
             'order_status_id' => 6,
             'pickup_date_id' => $request->input('pickup_date_id'),
             'comment' => $request->input('customerComments', ''),
+            'sales_group_id' => $request->input('sales_group_id'),
+            'store_name' => $request->input('store_name', ''),
         ];
 
         $order = Order::create($input);
-
+        $pickupDate = PickupDate::find($request->input('pickup_date_id'));
         $order_products = $this->helper->createOrderProducts($request, $order->order_id);
 
         //todo: read credentials from .env
         $basic = new \Nexmo\Client\Credentials\Basic('7c3f0476', 'Bcw4iJegrWBx1c5Z');
         $client = new \Nexmo\Client($basic);
 
-        $text = '订单' . $request->invoice_no . ',成功下单,本次消费' . $request->total;
+        $text = 'order: ' . $order->invoice_no . ' is approved. total cost: ' . $order->total;
 
         $message = $client->message()->send([
             'to' => '61403357750',
-            'from' => '天府团购',
+            'from' => 'Tianfu Groupon',
             'text' => $text,
         ]);
 
-        return response()->json(compact("order", 'order_products'));
+        return response()->json(compact("order", 'pickupDate', 'order_products'));
     }
 
     /**

@@ -11,11 +11,10 @@ class Order extends Model
     public $timestamps = false;
 
     //'fax' be used as pickedDate
-    protected $fillable = ['invoice_no', 'store_id', 'customer_id', 'payment_method', 'total', 'date_added', 'date_modified', 'order_status_id', 'pickup_date_id', 'comment'];
+    protected $fillable = ['invoice_no', 'store_id', 'customer_id', 'payment_method', 'total', 'date_added', 'date_modified', 'order_status_id', 'pickup_date_id', 'comment', 'sales_group_id', 'store_name'];
 
     protected $attributes = [
         'invoice_prefix' => "DAINTY",
-        'store_name' => "",
         'store_url' => "",
         'customer_group_id' => 1,
         'firstname' => "",
