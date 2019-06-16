@@ -7,9 +7,6 @@ use App\Classes\Redpayments;
 use App\Http\Controllers\helpers\OrderHelper;
 use App\Order;
 use App\PaymentNotify;
-use App\Product;
-use App\ProductDiscount;
-use App\User;
 use Illuminate\Http\Request;
 
 class PaymentController extends Controller
@@ -26,50 +23,50 @@ class PaymentController extends Controller
 
         //Todo: validation
 
-        //1. create order
+        //1. find order
+        $order = Order::find($request->input('order_id'));
+        // $dt = new \DateTime("now", new \DateTimeZone('Australia/Sydney'));
+        // $today = $dt->format('y-m-d');
 
-        $dt = new \DateTime("now", new \DateTimeZone('Australia/Sydney'));
-        $today = $dt->format('y-m-d');
+        // $token = $request->bearerToken();
+        // $user = User::where("api_token", $token)->first();
 
-        $token = $request->bearerToken();
-        $user = User::where("api_token", $token)->first();
+        // if (isset($request->order_id)) {
+        //     $order = Order::find($request->order_id);
+        //     if ($order !== null) {
+        //         $order->delete();
 
-        if (isset($request->order_id)) {
-            $order = Order::find($request->order_id);
-            if ($order !== null) {
-                $order->delete();
+        //         $order_products = $order->products()->get();
+        //         foreach ($order_products as $order_product) {
 
-                $order_products = $order->products()->get();
-                foreach ($order_products as $order_product) {
+        //             $target_product = Product::find($order_product->product_id)->increment('quantity', $order_product->quantity);
+        //             $target_productDiscount = ProductDiscount::where("product_id", $order_product->product_id)->first();
+        //             if ($target_productDiscount !== null) {
+        //                 $target_productDiscount->increment("quantity", $order_product->quantity);
+        //             }
+        //             $order_product->delete();
+        //         }
+        //     }
+        // }
 
-                    $target_product = Product::find($order_product->product_id)->increment('quantity', $order_product->quantity);
-                    $target_productDiscount = ProductDiscount::where("product_id", $order_product->product_id)->first();
-                    if ($target_productDiscount !== null) {
-                        $target_productDiscount->increment("quantity", $order_product->quantity);
-                    }
-                    $order_product->delete();
-                }
-            }
-        }
+        // $input = [
+        //     'invoice_no' => $request->invoice_no,
+        //     'store_id' => isset($request->store_id) ? $request->store_id : "",
+        //     'customer_id' => $user->user_id,
+        //     'fax' => isset($request->fax) ? $request->fax : "",
+        //     'payment_method' => isset($request->channel) ? $request->channel : "",
+        //     'total' => isset($request->total) ? $request->total : "",
+        //     'date_added' => $today,
+        //     'date_modified' => $today,
+        //     'order_status_id' => 6,
+        // ];
+        // $order = Order::create($input);
+        // if (isset($request->customerComments)) {
+        //     $order->comment = $request->customerComments;
+        //     $order->save();
+        // }
 
-        $input = [
-            'invoice_no' => $request->invoice_no,
-            'store_id' => isset($request->store_id) ? $request->store_id : "",
-            'customer_id' => $user->user_id,
-            'fax' => isset($request->fax) ? $request->fax : "",
-            'payment_method' => isset($request->channel) ? $request->channel : "",
-            'total' => isset($request->total) ? $request->total : "",
-            'date_added' => $today,
-            'date_modified' => $today,
-            'order_status_id' => 6,
-        ];
-        $order = Order::create($input);
-        if (isset($request->customerComments)) {
-            $order->comment = $request->customerComments;
-            $order->save();
-        }
-
-        $order_products = $this->OrderHelper->createOrderProducts($request, $order->order_id);
+        // $order_products = $this->OrderHelper->createOrderProducts($request, $order->order_id);
 
         //2. create payment
         $approvel_url = "";

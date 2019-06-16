@@ -21,6 +21,8 @@ class Redpayments
 
     public function create($request)
     {
+        $date = new \DateTime("now", new \DateTimeZone("Australia/Sydney"));
+
         // read input
         $requestBody = [
             "amount" => $request->total,
@@ -35,7 +37,7 @@ class Redpayments
             "quantity" => $request->quantity,
             "returnUrl" => config("app.returnUrl") . "/$request->channel",
             "storeNo" => config("redpayments.storeNo"),
-            "timestamp" => $request->timestamps,
+            "timestamp" => $date->getTimestamp(),
             "version" => $this->version,
         ];
         // add sign
