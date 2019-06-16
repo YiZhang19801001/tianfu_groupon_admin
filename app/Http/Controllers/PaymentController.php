@@ -131,19 +131,19 @@ class PaymentController extends Controller
     }
 
     //* receive notify from payment api, if success paid, then change order status in database.
-    public function notify(Request $request, $pay_way)
+    public function notify(Request $request, $payment_method)
     {
 
         $dt = new \DateTime("now", new \DateTimeZone('Australia/Sydney'));
         $date_received = $dt->format('y-m-d h:m:s');
         $status = "";
-        $message = "can not find $pay_way";
+        $message = "can not find $payment_method";
         $result_array = array();
-        if ($pay_way === 'poli') {
+        if ($payment_method === 'poli') {
             $poli = new Poli();
             $result_array = $poli->handleNotify($request);
         }
-        if ($pay_way === 'WECHAT' || $pay_way === 'ALIPAY') {
+        if ($payment_method === 'WECHAT' || $payment_method === 'ALIPAY') {
             $redpayments = new Redpayments();
             $result_array = $redpayments->handleNotify($request);
         }
@@ -151,7 +151,7 @@ class PaymentController extends Controller
         $message = $result_array["message"];
         $status = $result_array["status"];
 
-        PaymentNotify::create(compact("date_received", "message", "pay_way", 'status'));
+        PaymentNotify::create(compact("date_received", "message", "payment_method", 'status'));
 
     }
 
