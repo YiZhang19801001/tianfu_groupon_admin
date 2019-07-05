@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\helpers\LocationHelper;
 use App\Location;
+use App\LocationDescription;
 use Illuminate\Http\Request;
 
 class LocationController extends Controller
@@ -40,12 +41,7 @@ class LocationController extends Controller
     public function show($location_id)
     {
         $shop = Location::find($location_id);
-        if ($shop->open !== null) {
-            $shop->open = json_decode($shop->open);
-        } else {
-            $shop->open = json_decode('{}');
-        }
-
+        $shop->pickupDate = $shop->pickupDate()->get();
         return response()->json(compact("shop"), 200);
     }
 
@@ -56,6 +52,9 @@ class LocationController extends Controller
      */
     public function create(Request $request)
     {
+
+        $location_name_en = $request->input('en_name', "");
+        $location_name_cn = $request->input('cn_name', "");
 
         //validation
         $validatedData = $request->validate([
@@ -73,8 +72,8 @@ class LocationController extends Controller
 
         // create location
         $location = Location::create([
-            'name' => $request->name,
-            'open' => json_encode($request->open),
+            'name' => $request->input('name', ""),
+            'open' => json_encode($request->input('open', [])),
             'address' => $request->address,
             'telephone' => $request->telephone,
         ]);
@@ -83,6 +82,9 @@ class LocationController extends Controller
             $location->status = $request->status;
             $location->save();
         }
+
+        LocationDescription::create(['location_id' => $location->location_id, 'language_id' => "1", "location_name" => $location_name_en]);
+        LocationDescription::create(['location_id' => $location->location_id, 'language_id' => "2", "location_name" => $location_name_cn]);
 
         // prepare data
         $locations = $this->helper->getLocations(0);
@@ -135,7 +137,27 @@ class LocationController extends Controller
 
         $location->update($input);
 
-        $locations = $this->helper->getLocations(0);
+        if (isset($request->en_name)) {
+            $locationDescription = LocationDescription::where('location_id', $location_id)->where('language_id', 1)->first();
+            if ($locationDescription === null) {
+                LocationDescription::create(['location_id' => $location_id, 'language_id' => 1, 'location_name' => $request->en_name]);
+            } else {
+                $locationDescription->location_name = $request->en_name;
+                $locationDescription->save();
+            }
+        }
+
+        if (isset($request->cn_name)) {
+            $locationDescription = LocationDescription::where('location_id', $location_id)->where('language_id', 2)->first();
+            if ($locationDescription === null) {
+                LocationDescription::create(['location_id' => $location_id, 'language_id' => 2, 'location_name' => $request->cn_name]);
+            } else {
+                $locationDescription->location_name = $request->cn_name;
+                $locationDescription->save();
+            }
+        }
+
+        $locations = $this->helper->getLocations(0, 2);
 
         return response()->json(compact('locations'), 200);
     }
@@ -147,7 +169,7 @@ class LocationController extends Controller
 
         $location->save();
 
-        $locations = $this->helper->getLocations();
+        $locations = $this->helper->getLocations(0,$request->input('language_id',2));
 
         return response()->json(compact("locations"), 200);
     }
@@ -159,7 +181,9 @@ class LocationController extends Controller
 
         $location->save();
 
-        $locations = $this->helper->getLocations();
+        $language_id = $request->input('language_id', 2);
+
+        $locations = $this->helper->getLocations(0, $language_id);
 
         return response()->json(compact("locations"), 200);
 
