@@ -26,6 +26,8 @@ class LocationHelper
 
         # resign location name
         foreach ($locations as $location) {
+            $location->descriptions = $location->descriptions()->get();
+
             $locationDescription = LocationDescription::where('location_id', $location->location_id)->where('language_id', $language_id)->first();
             if ($locationDescription === null) {
                 $locationDescription = LocationDescription::where('location_id', $location->location_id)->first();

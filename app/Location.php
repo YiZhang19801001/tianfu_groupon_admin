@@ -29,4 +29,9 @@ class Location extends Model
     {
         return $this->hasMany('App\PickupDate', 'location_id', 'location_id');
     }
+
+    public function descriptions()
+    {
+        return $this->hasMany('App\LocationDescription', 'location_id', 'location_id');
+    }
 }

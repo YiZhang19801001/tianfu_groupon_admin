@@ -42,6 +42,7 @@ class LocationController extends Controller
     {
         $shop = Location::find($location_id);
         $shop->pickupDate = $shop->pickupDate()->get();
+        $shop->descriptions = $shop->descriptions()->get();
         return response()->json(compact("shop"), 200);
     }
 
@@ -169,7 +170,7 @@ class LocationController extends Controller
 
         $location->save();
 
-        $locations = $this->helper->getLocations(0,$request->input('language_id',2));
+        $locations = $this->helper->getLocations(0, $request->input('language_id', 2));
 
         return response()->json(compact("locations"), 200);
     }
