@@ -2,11 +2,12 @@
 namespace App\Http\Controllers\helpers;
 
 use App\Location;
+use App\LocationDescription;
 use App\PickupDate;
 
 class LocationHelper
 {
-    public function getLocations($sales_group_id)
+    public function getLocations($sales_group_id, $language_id)
     {
 
         if ($sales_group_id != 0) {
@@ -21,6 +22,18 @@ class LocationHelper
 
         } else {
             $locations = Location::where('status', 0)->with('pickupDate')->get();
+        }
+
+        # resign location name
+        foreach ($locations as $location) {
+            $locationDescription = LocationDescription::where('location_id', $location->location_id)->where('language_id', $language_id)->first();
+            if ($locationDescription === null) {
+                $locationDescription = LocationDescription::where('location_id', $location->location_id)->first();
+            }
+
+            if ($locationDescription !== null) {
+                $location->name = $locationDescription->location_name;
+            }
         }
 
         # return modified locations

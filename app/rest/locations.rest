@@ -1,1 +1,5 @@
-GET http://kidsnparty.com.au/roben_api/groupon/public/api/locations?sales_group_id=3
+#GET http://kidsnparty.com.au/roben_api/groupon/public/api/locations?sales_group_id=3
+
+###
+
+GET http://localhost:8000/api/locations  HTTP/1.1

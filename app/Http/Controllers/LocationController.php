@@ -29,8 +29,10 @@ class LocationController extends Controller
             return response()->json(compact('errors'), 422);
         }
 
+        $language_id = $request->input('language_id', 2);
+
         // prepare data
-        $locations = $this->helper->getLocations($request->input('sales_group_id', 0));
+        $locations = $this->helper->getLocations($request->input('sales_group_id', 0), $language_id);
 
         return response()->json(compact('locations'), 200);
     }
