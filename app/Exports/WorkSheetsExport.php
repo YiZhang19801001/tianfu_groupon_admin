@@ -2,41 +2,29 @@
 
 namespace App\Exports;
 
-use Maatwebsite\Excel\Concerns\FromArray;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithTitle;
+use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class WorkSheetsExport implements FromArray, WithHeadings, WithTitle, ShouldAutoSize
+class WorkSheetsExport implements WithMultipleSheets
 {
 
-    protected $workSheets;
-    protected $title;
-    protected $headings;
+    use Exportable;
 
-    public function __construct(array $workSheets, $title, $headings)
+    protected $workSheets;
+
+    public function __construct(array $workSheets, $headings)
     {
         $this->workSheets = $workSheets;
-        $this->title = $title;
         $this->headings = $headings;
     }
 
-    function array(): array
+    public function sheets(): array
     {
-        return $this->workSheets;
-    }
-
-    public function headings(): array
-    {
-        return $this->headings;
-    }
-
-    /**
-     * @return string
-     */
-    public function title(): string
-    {
-        return $this->title;
+        $sheets = [];
+        foreach ($this->workSheets as $sheet) {
+            $sheets[] = new Sheet($sheet['data'], $sheet['title'], $this->headings);
+        }
+        return $sheets;
     }
 
 }

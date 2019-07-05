@@ -20,6 +20,7 @@ class Product extends Model
         'image' => '',
         'shipping' => 1,
         'location' => '',
+        'manufacturer_id' => 1,
         'points' => 0,
         'tax_class_id' => 1,
         'weight' => 12.8,

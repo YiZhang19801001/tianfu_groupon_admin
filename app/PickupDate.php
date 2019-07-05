@@ -10,4 +10,5 @@ class PickupDate extends Model
     protected $primaryKey = "pickup_date_id";
     public $timestamps = false;
 
+    protected $fillable = ['sales_group_id', 'location_id', 'date'];
 }

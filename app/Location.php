@@ -17,10 +17,16 @@ class Location extends Model
         'geocode' => '',
         'image' => '',
         'comment' => '',
+        'status' => 0,
     ];
     protected $hidden = [
         'fax',
         'geocode',
         'comment',
     ];
+
+    public function pickupDate()
+    {
+        return $this->hasMany('App\PickupDate', 'location_id', 'location_id');
+    }
 }

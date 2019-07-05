@@ -7,8 +7,6 @@ use App\Http\Controllers\helpers\ProductHelper;
 use App\Option;
 use App\Product;
 use App\ProductDescription;
-use App\ProductOption;
-use App\ProductOptionValue;
 use App\ProductToCategory;
 use App\User;
 use Illuminate\Http\Request;
@@ -35,7 +33,6 @@ class ProductController extends Controller
         $calledFrom = $request->input('called_from', 'client');
 
         $sales_group_id = $calledFrom === 'client' ? $request->input('sales_group_id', 0) : 0;
-
         # read user_group_id from token
         $user_group_id = 0;
         $token = $request->bearerToken();
@@ -55,10 +52,11 @@ class ProductController extends Controller
      * @param Request
      * @return Response new product json just created
      */
-    public function create(Request $request)
+    public function store(Request $request)
     {
         // Todo:: validate $request
         $errors = array();
+
         $status = 1;
         $product = json_decode(json_encode($request->product));
 
@@ -74,8 +72,8 @@ class ProductController extends Controller
             'price' => $product->price,
             'quantity' => isset($product->quantity) ? $product->quantity : 999,
             "sort_order" => $product->sort_order,
-            'date_available' => isset($product->date_available) ? $product->date_available : '2190-12-12',
-            'manufacturer_id' => isset($product->manufacturer_id) ? $product->manufacturer_id : 1,
+            'date_available' => isset($product->date_available) ? $product->date_available : '2018-12-12',
+            'location' => isset($product->location_id) ? $product->location_id : 1,
         ]);
 
         if (isset($product->points)) {
@@ -100,38 +98,7 @@ class ProductController extends Controller
         $descriptionCn = ProductDescription::create(['product_id' => $product_id, 'language_id' => 2, 'name' => $product->chinese_name]);
         $descriptionEn = ProductDescription::create(['product_id' => $product_id, 'language_id' => 1, 'name' => $product->english_name]);
 
-        //4. create options for product
-
-        if (isset($request->options)) {
-            foreach ($request->options as $option) {
-                $option = json_decode(json_encode($option));
-
-                //4.1 create oc_product_option
-                $productOption = ProductOption::create([
-                    'product_id' => $product_id,
-                    'option_id' => $option->option_id,
-                    'value' => isset($option->value) ? $option->value : '', 'required' => isset($option->required) ? $option->required : 1,
-                ]);
-                // create option_values
-                foreach ($option->values as $value) {
-                    $value = json_decode(json_encode($value));
-                    //4.6 create oc_product_option_value
-                    $productOptionValue = ProductOptionValue::create([
-                        'product_option_id' => $productOption->product_option_id,
-                        'product_id' => $product_id, 'option_id' => $option->option_id,
-                        'option_value_id' => $value->option_value_id, 'quantity' => isset($value->quantity) ? $value->quantity : 999, 'price' => isset($value->price) ? $value->price : 0,
-                    ]);
-                }
-            }
-
-        }
-
         ProductToCategory::create(['product_id' => $product_id, "category_id" => $category_id]);
-
-        # groupon product add discounts
-        if ($request->isGroupon) {
-            $this->helper->createDiscount($request, $product_id);
-        }
 
         # prepare response object
         $search_string = isset($request->search_string) ? $request->search_string : "";
@@ -139,7 +106,7 @@ class ProductController extends Controller
         $language_id = isset($request->language_id) ? $request->language_id : 2;
         $user_group_id = 2;
 
-        $products = $this->helper->getProductsList($language_id, $status, $search_string, $user_group_id);
+        $products = $this->helper->getProductsList($language_id, $status, $search_string, $user_group_id, 2, 0);
         return response()->json(compact("products"), 201);
     }
 
@@ -157,11 +124,18 @@ class ProductController extends Controller
         $request->product = json_decode(json_encode($request->product));
         $search_string = isset($request->search_string) ? $request->search_string : "";
 
+        $reqCategory = json_decode(json_encode($request->category));
+
+        $productToCategory = ProductToCategory::where('product_id',$product_id)->first();
+        $productToCategory->delete();
+        ProductToCategory::create(['product_id'=>$product_id,'category_id'=>$reqCategory->category_id]);
+
+
+
         if (!is_numeric($product_id) || !is_integer($product_id + 0)) {
             $errors['product_id'] = ['The product id field is required.'];
 
         } else {
-
             $product = Product::find($product_id);
             if ($product === null) {
                 $errors['product'] = ['The product is not found.'];
@@ -175,14 +149,11 @@ class ProductController extends Controller
         //2. update oc_product
         $product = Product::find($product_id);
         $product->price = $request->product->price;
-        $product->quantity = $request->product->quantity;
         $product->sort_order = $request->product->sort_order;
         // $product->points = $request->product->points;
         // $product->location = $request->product->location;
         // $product->date_available = $request->product->date_available;
-        if ($request->isGroupon) {
-            $product->stock_status_id = $request->product->stock_status_id;
-        }
+
         if ($request->location_id) {
             $product->location = $request->location_id;
         }
@@ -209,64 +180,9 @@ class ProductController extends Controller
             $en_des->save();
         }
 
-        //4. update options for product
-        $options = array();
-        $new_product_option_ids = array();
-        foreach ($request->options as $option) {
-            $option = json_decode(json_encode($option));
-            $option_array = array();
-            // 4.1 check if update option or add option
-            if (isset($option->product_option_id)) // update
-            {
-                array_push($new_product_option_ids, $option->product_option_id);
-                $product_option = ProductOption::find($option->product_option_id);
-                $product_option->optionValues()->delete();
-                foreach ($option->values as $optionValue) {
-                    $optionValue = json_decode(json_encode($optionValue));
-                    ProductOptionValue::create([
-                        'product_option_id' => $option->product_option_id,
-                        'product_id' => $product_id,
-                        'option_id' => $option->option_id,
-                        'option_value_id' => $optionValue->option_value_id,
-                        'quantity' => 999,
-                        'price' => 0.00,
-                    ]);
-                }
-            } else // add
-            {
-                $product_option = ProductOption::create([
-                    'product_id' => $product_id,
-                    'option_id' => $option->option_id,
-                    'value' => "",
-                    'required' => 1,
-                ]);
-                array_push($new_product_option_ids, $product_option->product_option_id);
-                foreach ($option->values as $optionValue) {
-                    $optionValue = json_decode(json_encode($optionValue));
-                    ProductOptionValue::create([
-                        'product_option_id' => $product_option->product_option_id,
-                        'product_id' => $product_id,
-                        'option_id' => $option->option_id,
-                        'option_value_id' => $optionValue->option_value_id,
-                        'quantity' => 999,
-                        'price' => 0.00,
-                    ]);
-                }
-            }
-        }
-
-        // Review:: use whereIn and whereNotIn
-        # groupon product add discounts
-        if ($request->isGroupon) {
-            $this->helper->createDiscount($request, $product_id);
-        }
-
-        // 5. delete options - remove product option which product_option_id not contains in $new_product_opiton_ids
-        ProductOption::where("product_id", $product_id)->whereNotIn("product_option_id", $new_product_option_ids)->delete();
-
         $status = isset($request->status) ? $request->status : 0;
         $language_id = isset($request->language_id) ? $request->language_id : 2;
-        $response_array = $this->helper->getProductsList($language_id, $status, $search_string, 2);
+        $response_array = $this->helper->getProductsList($language_id, $status, $search_string, 2, 0);
 
         return response()->json($response_array, 200);
 
@@ -313,7 +229,7 @@ class ProductController extends Controller
         }
 
         # make return response object
-        $response_array = $this->helper->getProductsList($language_id, $status, $search_string, 2);
+        $response_array = $this->helper->getProductsList($language_id, $status, $search_string, 2, 0);
 
         return response()->json($response_array, 200);
     }

@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Exports\WorkSheetsExport;
 use App\Http\Controllers\helpers\ProductHelper;
+use App\Order;
+use App\OrderProduct;
+use App\PickupDate;
+use App\ProductDescription;
+use App\ProductDiscount;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -18,64 +23,103 @@ class ExportExcelController extends Controller
     public function index(Request $request)
     {
         # read inputs
-        $language_id = $request->input('language_id', 1);
-        $status = $request->input('status', 0);
-        $search_string = $request->input('search_string', '');
-        $user_group_id = $request->input('user_group_id', 3);
+        $sales_group_id = $request->input('sales_group_id');
 
-        $products = $this->productHelper->getProductsList($language_id, $status, $search_string, $user_group_id);
-        $orders = [
-            array('order_id' => 1, 'invoice_no' => 1),
-        ];
-
+        # fetch products from DB
+        $productDiscounts = ProductDiscount::where('sales_group_id', $sales_group_id)->get();
+        # build excel file headers
         $headingsTop = ['name'];
         $headingsBottom = ['quantity'];
         $customer_array = [];
 
-        # make headings
-        foreach ($products[0]["products"] as $product) {
+        foreach ($productDiscounts as $productDiscount) {
+            $description = ProductDescription::where('language_id', 2)->where('product_id', $productDiscount->product_id)->first();
+            $name = $description->name;
+            array_push($headingsTop, $name);
 
-            $product = json_decode(json_encode($product));
+            $price = '$' . number_format($productDiscount->price, 2);
 
-            array_push($headingsTop, $product->name);
-            array_push($headingsBottom, $product->price);
+            array_push($headingsBottom, $price);
         }
 
-        # mapping order_products quantity to each product
+        array_push($headingsTop, 'Amount');
+        array_push($headingsTop, 'pickup date & location');
 
+        # fetch orders
+        $orders = Order::where('sales_group_id', $sales_group_id)->where('order_status_id', 2)->get();
         foreach ($orders as $order) {
-
-            $newArray = [];
-            # 1. get order products quantity
-            $orderProducts = $order->orderProducts()->get();
-            # 2. mapping values to each products
-            foreach ($products as $product) {
-                // if product id matched return quantity, otherwise return 0
-                $matchedOrderProduct = $orderProducts->where($product->product_id)->first();
-
+            $pickupDate = PickupDate::find($order->pickup_date_id);
+            $order['pickup_date'] = $pickupDate->date;
+        }
+        $newTotalArray = [];
+        foreach ($orders as $order) {
+            $orderProducts = OrderProduct::where('order_id', $order->order_id)->get();
+            $newArray = [$order->order_id];
+            foreach ($productDiscounts as $productDiscount) {
+                $matchedOrderProduct = $orderProducts->where('product_discount_id', $productDiscount->product_discount_id)->first();
                 if ($matchedOrderProduct === null) {
-                    $newArray[] = 0;
+                    array_push($newArray, 0);
                 } else {
-                    $newArray[] = $matchedOrderProduct->quantity;
+                    array_push($newArray, $matchedOrderProduct->quantity);
                 }
             }
+            array_push($newArray, $order->total);
 
-            $customer_array[] = $newArray;
+            array_push($newArray, $order->store_name . ' ' . $order->pickup_date);
+
+            array_push($newTotalArray, $newArray);
+        }
+        array_push($customer_array, ['data' => $newTotalArray, 'title' => '总数']);
+
+        $orderGroups = $orders->groupBy('store_id');
+
+        foreach ($orderGroups as $orderGroup) {
+            $newStoreArray = [];
+            foreach ($orderGroup as $order) {
+                $orderProducts = OrderProduct::where('order_id', $order->order_id)->get();
+                $newArray = [$order->order_id];
+                foreach ($productDiscounts as $productDiscount) {
+                    $matchedOrderProduct = $orderProducts->where('product_discount_id', $productDiscount->product_discount_id)->first();
+                    if ($matchedOrderProduct === null) {
+                        array_push($newArray, 0);
+                    } else {
+                        array_push($newArray, $matchedOrderProduct->quantity);
+                    }
+                }
+                array_push($newArray, $order->total);
+                array_push($newArray, $order->store_name . ' ' . $order->pickup_date);
+
+                array_push($newStoreArray, $newArray);
+            }
+            array_push($customer_array, ['data' => $newStoreArray, 'title' => $orderGroup[0]['store_name']]);
+        }
+
+        $orderGroups = $orders->groupBy('pickup_date');
+
+        foreach ($orderGroups as $orderGroup) {
+            $newDateArray = [];
+            foreach ($orderGroup as $order) {
+                $orderProducts = OrderProduct::where('order_id', $order->order_id)->get();
+                $newArray = [$order->order_id];
+                foreach ($productDiscounts as $productDiscount) {
+                    $matchedOrderProduct = $orderProducts->where('product_discount_id', $productDiscount->product_discount_id)->first();
+                    if ($matchedOrderProduct === null) {
+                        array_push($newArray, 0);
+                    } else {
+                        array_push($newArray, $matchedOrderProduct->quantity);
+                    }
+                }
+                array_push($newArray, $order->total);
+                array_push($newArray, $order->store_name . ' ' . $order->pickup_date);
+
+                array_push($newDateArray, $newArray);
+            }
+            array_push($customer_array, ['data' => $newDateArray, 'title' => $orderGroup[0]['pickup_date'] . ' 总数']);
         }
 
         $headings = [$headingsTop, $headingsBottom];
-        $export = new WorkSheetsExport($customer_array, 'new sheets title', $headings);
+        $export = new WorkSheetsExport($customer_array, $headings);
 
-        // Excel::create('Customer Data', function ($excel) use ($customer_array) {
-        //     $excel->setTitle('Customer Data');
-        //     $excel->sheet('Customer Data', function ($sheet) use ($customer_array) {
-        //         $sheet->fromArray($customer_array, null, 'A1', false, false);
-        //     });
-        // })->download('xlsx');
-
-        // return Excel::download($customer_array, 'customers.xlsx');
-        return Excel::download($export, 'users.xlsx');
-
-        // return response()->json($customer_array);
+        return Excel::download($export, 'worksheets.xlsx');
     }
 }

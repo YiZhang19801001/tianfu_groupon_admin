@@ -10,5 +10,5 @@ class PaymentNotify extends Model
     protected $primaryKey = 'payment_notify_id';
     public $timestamps = false;
 
-    protected $fillable = ['date_received', 'message', 'pay_way', 'status'];
+    protected $fillable = ['date_received', 'message', 'payment_method', 'status'];
 }

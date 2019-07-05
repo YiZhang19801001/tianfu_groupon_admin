@@ -76,7 +76,7 @@ class OrderController extends Controller
     {
         $method = isset($request->method) ? $request->method : "all";
         $search_string = isset($request->search_string) ? $request->search_string : "";
-
+        $sales_group_id = $request->sales_group_id;
         $dt = new \DateTime("now", new \DateTimeZone('Australia/Sydney'));
         $today = $dt->format('Y-m-d');
 
@@ -86,23 +86,23 @@ class OrderController extends Controller
         switch ($method) {
             case 'all':
                 if (isset($request->location_id)) {
-                    $orders = $this->helper->makeOrdersGroupByLocation($search_string, $start_date, $end_date, $request->location_id);
+                    $orders = $this->helper->makeOrdersGroupByLocation($search_string, $start_date, $end_date, $request->location_id,$sales_group_id);
                 } else {
 
-                    $orders = $this->helper->makeOrders($search_string, $start_date, $end_date);
+                    $orders = $this->helper->makeOrders($search_string, $start_date, $end_date,$sales_group_id);
                 }
                 break;
             case 'byStore':
-                $orders = $this->helper->makeOrdersByStore($search_string, $start_date, $end_date);
+                $orders = $this->helper->makeOrdersByStore($search_string, $start_date, $end_date, $sales_group_id);
                 break;
             case 'adv':
-                $orders = $this->helper->makeOrdersByCondition($search_string, $start_date, $end_date);
+                $orders = $this->helper->makeOrdersByCondition($search_string, $start_date, $end_date,$sales_group_id);
                 break;
             case 'products':
-                $orders = $this->helper->makeOrderedProductsListByStore($search_string, $start_date, $end_date);
+                $orders = $this->helper->makeOrderedProductsListByStore($search_string, $start_date, $end_date, $sales_group_id);
                 break;
             default:
-                $orders = $this->helper->makeOrders($search_string, $start_date, $end_date);
+                $orders = $this->helper->makeOrders($search_string, $start_date, $end_date,$sales_group_id);
                 break;
         }
 
@@ -172,17 +172,17 @@ class OrderController extends Controller
         $pickupDate = PickupDate::find($request->input('pickup_date_id'));
         $order_products = $this->helper->createOrderProducts($request, $order->order_id);
 
-        //todo: read credentials from .env
-        $basic = new \Nexmo\Client\Credentials\Basic('7c3f0476', 'Bcw4iJegrWBx1c5Z');
-        $client = new \Nexmo\Client($basic);
+        // //todo: read credentials from .env
+        // $basic = new \Nexmo\Client\Credentials\Basic('7c3f0476', 'Bcw4iJegrWBx1c5Z');
+        // $client = new \Nexmo\Client($basic);
 
-        $text = 'order: ' . $order->invoice_no . ' is approved. total cost: ' . $order->total;
+        // $text = 'order: ' . $order->invoice_no . ' is approved. total cost: ' . $order->total;
 
-        $message = $client->message()->send([
-            'to' => '61403357750',
-            'from' => 'Tianfu Groupon',
-            'text' => $text,
-        ]);
+        // $message = $client->message()->send([
+        //     'to' => '61403357750',
+        //     'from' => 'Tianfu Groupon',
+        //     'text' => $text,
+        // ]);
 
         return response()->json(compact("order", 'pickupDate', 'order_products'));
     }

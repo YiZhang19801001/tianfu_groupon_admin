@@ -46,7 +46,9 @@ class ProductHelper
 
             $products = $category->products()->where("status", $status)->orderBy("sort_order", "desc")->with('discounts')->get();
             if ($sales_group_id != 0) {
+
                 $products = $products->whereIn('product_id', $productIds);
+
             }
 
             foreach ($products as $product) {
@@ -58,13 +60,14 @@ class ProductHelper
                 $product["isDiscount"] = $discountInfo["status"];
                 $product["discountQuantity"] = $discountInfo["quantity"];
                 $product['product_discount_id'] = $discountInfo['id'];
+                $product['discountMaxQuantity'] = $discountInfo['max_quantity'];
 
-                if (!$discountInfo["status"] && $sales_group_id != 0) {
-                    $products = $products->filter(function ($item) use ($product) {
-                        return $item->product_id !== $product->product_id;
-                    })->values();
-                    continue;
-                }
+                // if (!$discountInfo["status"] && $sales_group_id != 0) {
+                //     $products = $products->filter(function ($item) use ($product) {
+                //         return $item->product_id !== $product->product_id;
+                //     })->values();
+                //     continue;
+                // }
 
                 # make product location
                 $location = $product->location()->first();
@@ -245,6 +248,7 @@ class ProductHelper
             return array(
                 "price" => $result->price,
                 "quantity" => $result->quantity,
+                'max_quantity' => $result->max_quantity,
                 "status" => true,
                 'id' => $result->product_discount_id,
             );

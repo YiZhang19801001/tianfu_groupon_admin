@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\helpers\ProductHelper;
 use App\ProductDiscount;
+use App\SalesGroup;
 use Illuminate\Http\Request;
 
 class ProductDiscountsController extends Controller
@@ -22,8 +23,13 @@ class ProductDiscountsController extends Controller
         $price = $request->input('price');
         $sales_group_id = $request->input('sales_group_id');
 
+        $salesGroup = SalesGroup::find($sales_group_id);
+
+        $date_start = $salesGroup->start_date;
+        $date_end = $salesGroup->end_date;
+
         #create new discount in DB
-        ProductDiscount::create(["product_id" => $product_id, "price" => $price, 'quantity' => $quantity, "max_quantity" => $max_quantity]);
+        ProductDiscount::create(compact('product_id', 'price', 'quantity', 'max_quantity', 'sales_group_id', "date_start", "date_end"));
 
         #prepare response object
         $product = $this->productHelper->getSingleProduct(2, $product_id);

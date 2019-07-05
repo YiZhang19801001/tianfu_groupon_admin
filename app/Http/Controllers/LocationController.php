@@ -30,7 +30,7 @@ class LocationController extends Controller
         }
 
         // prepare data
-        $locations = $this->helper->getLocations($request->input('sales_group_id'));
+        $locations = $this->helper->getLocations($request->input('sales_group_id', 0));
 
         return response()->json(compact('locations'), 200);
     }
@@ -83,7 +83,7 @@ class LocationController extends Controller
         }
 
         // prepare data
-        $locations = $this->helper->getLocations();
+        $locations = $this->helper->getLocations(0);
 
         return response()->json(compact('locations'), 200);
 
@@ -133,7 +133,7 @@ class LocationController extends Controller
 
         $location->update($input);
 
-        $locations = $this->helper->getLocations();
+        $locations = $this->helper->getLocations(0);
 
         return response()->json(compact('locations'), 200);
     }

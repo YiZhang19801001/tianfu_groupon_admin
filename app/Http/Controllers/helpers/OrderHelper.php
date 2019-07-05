@@ -7,6 +7,7 @@ use App\Order;
 use App\OrderOption;
 use App\OrderProduct;
 use App\OrderStatus;
+use App\PickupDate;
 use App\Product;
 use App\ProductDescription;
 use App\ProductDiscount;
@@ -19,11 +20,10 @@ class OrderHelper
     /**
      * function - make orders group by store
      */
-    public function makeOrdersByStore($search_string, $start_date, $end_date)
+    public function makeOrdersByStore($search_string, $start_date, $end_date, $sales_group_id)
     {
-        $orders = Order::where("date_added", ">=", $start_date)
-            ->where("date_added", "<=", $end_date)
-            ->get();
+        $orders = Order::where('sales_group_id', $sales_group_id)->where('order_status_id', '!=', 6)->get();
+
         foreach ($orders as $order) {
             if ($search_string !== "") {
                 if (
@@ -141,16 +141,18 @@ class OrderHelper
         $order_products = array();
         foreach ($orderGroup as $order) {
             $order = json_decode(json_encode($order));
+            $pickupDate = PickupDate::find($order->pickup_date_id);
 
             foreach ($order->order_items as $order_item) {
                 $order_item = json_decode(json_encode($order_item));
                 $product_id = $order_item->product_id;
                 if (array_key_exists($product_id, $order_products)) {
+
                     array_push($order_products[$product_id],
                         [
                             "product_name" => $order_item->name,
                             "username" => $order->user->username,
-                            "date" => $order->fax,
+                            "date" => $pickupDate->date,
                             "quantity" => $order_item->quantity,
                         ]);
                 } else {
@@ -158,7 +160,7 @@ class OrderHelper
                         [
                             "product_name" => $order_item->name,
                             "username" => $order->user->username,
-                            "date" => $order->fax,
+                            "date" => $pickupDate->date,
                             "quantity" => $order_item->quantity,
                         ]);
                 };
@@ -174,10 +176,9 @@ class OrderHelper
      * @param Request
      * @return void
      */
-    public function makeOrders($search_string, $start_date, $end_date)
+    public function makeOrders($search_string, $start_date, $end_date, $sales_group_id)
     {
-        $orders = Order::where("date_added", "<=", $end_date)
-            ->where("date_added", ">=", $start_date)
+        $orders = Order::where('sales_group_id', $sales_group_id)->where('order_status_id', '!=', 6)
             ->paginate(10);
 
         foreach ($orders as $order) {
@@ -209,11 +210,11 @@ class OrderHelper
         return $orders;
     }
 
-    public function makeOrdersByCondition($search_string, $start_date, $end_date)
+    public function makeOrdersByCondition($search_string, $start_date, $end_date, $sales_group_id)
     {
-        $orders = Order::where("date_added", "<=", $end_date)
-            ->where("date_added", ">=", $start_date)
+        $orders = Order::where('sales_group_id', $sales_group_id)->where('order_status_id', '!=', 6)
             ->paginate(10);
+
         foreach ($orders as $order) {
             if ($search_string !== "") {
                 $order_products = $order->products()->where('name', 'like', "%$search_string%")->get();
@@ -244,7 +245,7 @@ class OrderHelper
      */
     public function fetchOrderPorductOption($order_product_id)
     {
-        $options = OrderOption::where('order_product_id', $order_product_id)->get();
+        $options = OrderOption::where('order_product_id', $order_product_id)->where('order_status_id', '!=', 6)->get();
 
         return $options;
     }
@@ -343,12 +344,10 @@ class OrderHelper
         return $result_array;
     }
 
-    public function makeOrderedProductsListByStore($search_string, $start_date, $end_date)
+    public function makeOrderedProductsListByStore($search_string, $start_date, $end_date, $sales_group_id)
     {
-        $orders = Order::where("date_added", "<=", $end_date)
-            ->where("date_added", ">=", $start_date)
-            ->where("order_status_id", 2)->get();
 
+        $orders = Order::where('sales_group_id', $sales_group_id)->where('order_status_id', '!=', 6)->get();
         foreach ($orders as $order) {
             if ($search_string !== "") {
                 if (
@@ -393,10 +392,9 @@ class OrderHelper
         return $collection->groupBy("location_id")->values();
     }
 
-    public function makeOrdersGroupByLocation($search_string, $start_date, $end_date, $location_id)
+    public function makeOrdersGroupByLocation($search_string, $start_date, $end_date, $location_id, $sales_group_id)
     {
-        $orders = Order::where("date_added", "<=", $end_date)
-            ->where("date_added", ">=", $start_date)
+        $orders = Order::where('sales_group_id', $sales_group_id)->where('order_status_id', '!=', 6)
             ->where("store_id", $location_id)
             ->paginate(6);
         foreach ($orders as $order) {
