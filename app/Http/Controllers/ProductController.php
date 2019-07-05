@@ -175,7 +175,7 @@ class ProductController extends Controller
             $cn_des->save();
         }
         $en_des = ProductDescription::where("product_id", $product_id)->where("language_id", 1)->first();
-        if ($en_des === null) {
+        if ($en_des !== null) {
             $en_des->name = $request->product->english_name;
             $en_des->save();
         }
