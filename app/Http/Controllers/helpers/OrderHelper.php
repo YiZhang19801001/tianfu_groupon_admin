@@ -422,4 +422,53 @@ class OrderHelper
         return $orders;
 
     }
+
+    # check is there any orders expiring.
+    public function checkOrderStatus()
+    {
+        # get datetime for now
+        $dt = new \DateTime('now', new \DateTimeZone('Australia/Sydney'));
+        
+        # create the condition datetime
+        // now + 6 mins
+       $expired_dt = date('y-m-d H:i:s', strtotime("6 minutes", strtotime($dt->format('y-m-d H:i:s'))));
+
+        # fetch all orders
+        $orders = Order::where('date_added', '<=', $expired_dt)->where('order_status_id',2)->get();
+
+        # modify stock
+
+        foreach ($orders as $order) {
+            # change order status
+            $order->update(['order_status_id'=>4]);
+
+            $this->modifyQuantityInStock($order->order_id);
+        }
+
+        return compact('orders');
+
+    }
+
+    # recalculate the stock quantity when order deleted or canceled
+    public function modifyQuantityInStock($order_id)
+    {
+        
+        # fetch all order_products according to order_id
+        $orderProducts = OrderProduct::where('order_id',$order_id)->get();
+
+        # modify quantity in db_table: product_discounts
+
+        foreach ($orderProducts as $orderProduct) {
+            $productDiscount = ProductDiscount::find($orderProduct->product_discount_id);
+
+            $productDiscount->increment('quantity', $orderProduct->quantity);
+
+            if($productDiscount->quantity > $productDiscount->max_quantity){
+                $productDiscount->update(['quantity'=>$productDiscount->max_quantity]);
+            }
+
+
+        }
+
+    }
 }

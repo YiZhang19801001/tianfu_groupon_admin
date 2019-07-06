@@ -74,6 +74,8 @@ class OrderController extends Controller
      */
     public function getAll(Request $request)
     {
+        $this->helper->checkOrderStatus();
+
         $method = isset($request->method) ? $request->method : "all";
         $search_string = isset($request->search_string) ? $request->search_string : "";
         $sales_group_id = $request->sales_group_id;
@@ -116,6 +118,7 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
+        $this->helper->checkOrderStatus();
         // get logged in user
         $user = $request->user();
         // response order with details container
@@ -144,7 +147,7 @@ class OrderController extends Controller
 
         # create date for today
         $dt = new DateTime("now", new DateTimeZone('Australia/Sydney'));
-        $today = $dt->format('y-m-d');
+        $today = $dt->format('y-m-d H:i:s');
 
         # get $user from $request
         $user = $request->user();
@@ -370,7 +373,7 @@ class OrderController extends Controller
         $search_string = isset($request->search_string) ? $request->search_string : "";
 
         $dt = new \DateTime("now", new \DateTimeZone('Australia/Sydney'));
-        $today = $dt->format('Y-m-d');
+        $today = $dt->format('Y-m-d H:i:s');
 
         $end_date = isset($request->end_date) ? $request->end_date : $today;
         $start_date = isset($request->start_date) ? $request->start_date : $today;

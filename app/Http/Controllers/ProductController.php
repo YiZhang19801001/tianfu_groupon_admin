@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Category;
+use App\Http\Controllers\helpers\OrderHelper;
 use App\Http\Controllers\helpers\ProductHelper;
 use App\Option;
 use App\Product;
@@ -14,10 +15,12 @@ use Illuminate\Http\Request;
 class ProductController extends Controller
 {
     private $helper;
+    private $orderHelper;
 
     public function __construct()
     {
         $this->helper = new ProductHelper();
+        $this->orderHelper = new OrderHelper();
     }
     /**
      * funciton - fetch all products 1. grouped by category 2. with full details (choices,options)
@@ -26,6 +29,7 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
+        $orderCheckingResults = $this->orderHelper->checkOrderStatus();
         # read input from request
         $language_id = $request->input('language_id', 2);
         $status = $request->input('product_status', 0);
@@ -44,7 +48,7 @@ class ProductController extends Controller
         $responseData = $this->helper->getProductsList($language_id, $status, $search_string, $user_group_id, $sales_group_id);
 
         # return response
-        return response()->json($responseData, 200);
+        return response()->json([$responseData, 'orderCheckingResults' => $orderCheckingResults], 200);
     }
 
     /**
@@ -126,11 +130,9 @@ class ProductController extends Controller
 
         $reqCategory = json_decode(json_encode($request->category));
 
-        $productToCategory = ProductToCategory::where('product_id',$product_id)->first();
+        $productToCategory = ProductToCategory::where('product_id', $product_id)->first();
         $productToCategory->delete();
-        ProductToCategory::create(['product_id'=>$product_id,'category_id'=>$reqCategory->category_id]);
-
-
+        ProductToCategory::create(['product_id' => $product_id, 'category_id' => $reqCategory->category_id]);
 
         if (!is_numeric($product_id) || !is_integer($product_id + 0)) {
             $errors['product_id'] = ['The product id field is required.'];
