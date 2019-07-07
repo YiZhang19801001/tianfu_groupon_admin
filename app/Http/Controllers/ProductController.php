@@ -48,7 +48,7 @@ class ProductController extends Controller
         $responseData = $this->helper->getProductsList($language_id, $status, $search_string, $user_group_id, $sales_group_id);
 
         # return response
-        return response()->json([$responseData, 'orderCheckingResults' => $orderCheckingResults], 200);
+        return response()->json($responseData, 200);
     }
 
     /**
