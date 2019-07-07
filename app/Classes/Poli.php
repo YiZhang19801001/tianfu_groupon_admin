@@ -2,7 +2,6 @@
 namespace App\Classes;
 
 use App\Order;
-use App\OrderProduct;
 
 class Poli
 {
@@ -70,16 +69,16 @@ class Poli
         $status = $response->TransactionStatus;
         if ($status === 'Completed') {
             $order = Order::where("payment_code", $response->TransactionRefNo)->first();
-            //todo:: change quantity in stock
-            $orderProducts = OrderProduct::where('order_id', $order->order_id)->get();
-            foreach ($orderProducts as $orderProduct) {
-                $qty = $orderProduct->quantity;
+            // //todo:: change quantity in stock -- quantity in stock will be changed when order created
+            // $orderProducts = OrderProduct::where('order_id', $order->order_id)->get();
+            // foreach ($orderProducts as $orderProduct) {
+            //     $qty = $orderProduct->quantity;
 
-                $product_discount = ProductDistount::find($orderProduct->product_discount_id);
+            //     $product_discount = ProductDistount::find($orderProduct->product_discount_id);
 
-                $product_discount->decrement('quantity', $qty);
-                $product_discount->save();
-            }
+            //     $product_discount->decrement('quantity', $qty);
+            //     $product_discount->save();
+            // }
             if ($order !== null) {
                 $order->order_status_id = 2;
                 $order->save();
